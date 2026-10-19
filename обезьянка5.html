@@ -2,282 +2,60 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>🐒 Обезьяна vs Учителя 🍌 - Полная версия</title>
+<title>🐒 Обезьяна vs Учителя 🍌</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { overflow: hidden; background: #000; font-family: 'Arial', sans-serif; }
   canvas { display: block; }
-  #ui {
-    position: fixed; top: 20px; left: 20px; color: #fff;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-    pointer-events: none; z-index: 10;
-  }
-  #level {
-    font-size: 36px; font-weight: bold;
-    background: linear-gradient(135deg, #00ff88, #00aaff);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 8px;
-  }
-  #score {
-    font-size: 28px; font-weight: bold;
-    background: linear-gradient(135deg, #ffd700, #ff8c00);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  #progress {
-    font-size: 20px; margin-top: 8px;
-    color: #00ff88;
-  }
-  #bananas { font-size: 20px; margin-top: 8px; }
-  #lives {
-    font-size: 28px; margin-top: 8px;
-    letter-spacing: 4px;
-  }
-  #cameras {
-    font-size: 20px; margin-top: 8px;
-    color: #ff4444;
-    background: rgba(0,0,0,0.5);
-    padding: 6px 12px;
-    border-radius: 8px;
-    border: 1px solid #ff4444;
-  }
-  #cameraWarning {
-    font-size: 18px; margin-top: 8px;
-    color: #ffff00;
-    background: rgba(100,0,0,0.7);
-    padding: 6px 12px;
-    border-radius: 8px;
-    border: 2px solid #ff0000;
-    animation: warningPulse 0.5s infinite;
-    display: none;
-  }
-  @keyframes warningPulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.7; transform: scale(1.05); }
-  }
-  #combo {
-    font-size: 24px; color: #ff4444; margin-top: 8px;
-    opacity: 0; transition: opacity 0.3s;
-  }
-  #interactionHint {
-    position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
-    font-size: 28px; color: #fff;
-    background: rgba(0,0,0,0.8);
-    padding: 15px 30px;
-    border-radius: 12px;
-    border: 2px solid #ffd700;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-    pointer-events: none; z-index: 15;
-    display: none;
-    animation: hintPulse 1s infinite;
-  }
-  @keyframes hintPulse {
-    0%, 100% { transform: translateX(-50%) scale(1); }
-    50% { transform: translateX(-50%) scale(1.05); }
-  }
-  #crosshair {
-    position: fixed; top: 50%; left: 50%;
-    width: 30px; height: 30px; transform: translate(-50%, -50%);
-    pointer-events: none; z-index: 10;
-  }
-  #crosshair::before, #crosshair::after {
-    content: ''; position: absolute; background: rgba(255,255,255,0.9);
-    box-shadow: 0 0 4px rgba(0,0,0,0.8);
-  }
+  #ui { position: fixed; top: 20px; left: 20px; color: #fff; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); pointer-events: none; z-index: 10; }
+  #level { font-size: 32px; font-weight: bold; background: linear-gradient(135deg, #00ff88, #00aaff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 6px; }
+  #score { font-size: 26px; font-weight: bold; background: linear-gradient(135deg, #ffd700, #ff8c00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  #progress { font-size: 18px; margin-top: 6px; color: #00ff88; }
+  #bananas, #lives, #cameras { font-size: 18px; margin-top: 6px; }
+  #cameras { color: #ff4444; background: rgba(0,0,0,0.5); padding: 4px 10px; border-radius: 6px; border: 1px solid #ff4444; display: inline-block; }
+  #cameraWarning { font-size: 16px; margin-top: 6px; color: #ffff00; background: rgba(100,0,0,0.7); padding: 4px 10px; border-radius: 6px; border: 2px solid #ff0000; animation: warningPulse 0.5s infinite; display: none; }
+  @keyframes warningPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+  #combo { font-size: 22px; color: #ff4444; margin-top: 6px; opacity: 0; transition: opacity 0.3s; }
+  #noBananaHint { position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); font-size: 22px; color: #ffd700; background: rgba(0,0,0,0.8); padding: 12px 24px; border-radius: 10px; border: 2px solid #ffd700; pointer-events: none; z-index: 15; display: none; }
+  #interactionHint { position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%); font-size: 24px; color: #fff; background: rgba(0,0,0,0.8); padding: 12px 24px; border-radius: 10px; border: 2px solid #ffd700; pointer-events: none; z-index: 15; display: none; }
+  #crosshair { position: fixed; top: 50%; left: 50%; width: 30px; height: 30px; transform: translate(-50%, -50%); pointer-events: none; z-index: 10; }
+  #crosshair::before, #crosshair::after { content: ''; position: absolute; background: rgba(255,255,255,0.9); box-shadow: 0 0 4px rgba(0,0,0,0.8); }
   #crosshair::before { left: 50%; top: 0; width: 2px; height: 100%; transform: translateX(-50%); }
   #crosshair::after { top: 50%; left: 0; height: 2px; width: 100%; transform: translateY(-50%); }
-  #crosshairDot {
-    position: absolute; top: 50%; left: 50%;
-    width: 4px; height: 4px; background: #ff4444; border-radius: 50%;
-    transform: translate(-50%, -50%);
-  }
-  #menu {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.9);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    z-index: 100; color: #fff; text-align: center;
-    backdrop-filter: blur(10px);
-    overflow-y: auto;
-    padding: 20px;
-  }
-  #menu h1 {
-    font-size: 56px; margin-bottom: 20px;
-    background: linear-gradient(135deg, #ffd700, #ff8c00, #ff4444);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: pulse 2s infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-  }
-  #menu p { font-size: 18px; margin: 8px 0; max-width: 600px; line-height: 1.6; }
-  #menu .controls { margin: 20px 0; font-size: 16px; color: #ccc; }
-  #menu button {
-    margin-top: 20px; padding: 16px 48px; font-size: 24px; font-weight: bold;
-    background: linear-gradient(135deg, #ffd700, #ff8c00);
-    border: none; border-radius: 12px; color: #000; cursor: pointer;
-    box-shadow: 0 8px 24px rgba(255,140,0,0.4);
-    transition: all 0.2s;
-  }
-  #menu button:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(255,140,0,0.6); }
-  #hitEffect {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    font-size: 80px; font-weight: bold; color: #ff4444;
-    text-shadow: 0 0 20px rgba(255,68,68,0.8), 4px 4px 0 #000;
-    pointer-events: none; opacity: 0; z-index: 50;
-    transition: all 0.4s;
-  }
-  #hitEffect.show { opacity: 1; transform: translate(-50%, -70%) scale(1.3); }
-  #dodgeEffect {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    font-size: 60px; font-weight: bold; color: #00aaff;
-    text-shadow: 0 0 20px rgba(0,170,255,0.8), 4px 4px 0 #000;
-    pointer-events: none; opacity: 0; z-index: 50;
-    transition: all 0.4s;
-  }
-  #dodgeEffect.show { opacity: 1; transform: translate(-50%, -70%) scale(1.2); }
-  #caughtEffect {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    font-size: 70px; font-weight: bold; color: #ff0000;
-    text-shadow: 0 0 30px rgba(255,0,0,1), 4px 4px 0 #000;
-    pointer-events: none; opacity: 0; z-index: 50;
-    transition: all 0.5s;
-  }
-  #caughtEffect.show { opacity: 1; transform: translate(-50%, -70%) scale(1.4); }
-  #cameraBreakEffect {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    font-size: 70px; font-weight: bold;
-    background: linear-gradient(135deg, #00ff88, #ffff00);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
-    text-shadow: 0 0 30px rgba(0,255,136,0.8);
-    pointer-events: none; opacity: 0; z-index: 50;
-    transition: all 0.5s;
-  }
-  #cameraBreakEffect.show { opacity: 1; transform: translate(-50%, -70%) scale(1.3); }
-  #damageFlash {
-    position: fixed; inset: 0;
-    background: radial-gradient(circle, transparent 40%, rgba(255,0,0,0.5) 100%);
-    pointer-events: none; opacity: 0; z-index: 45;
-    transition: opacity 0.3s;
-  }
+  #crosshairDot { position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; background: #ff4444; border-radius: 50%; transform: translate(-50%, -50%); }
+  #menu { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; color: #fff; text-align: center; backdrop-filter: blur(10px); overflow-y: auto; padding: 20px; }
+  #menu h1 { font-size: 52px; margin-bottom: 20px; background: linear-gradient(135deg, #ffd700, #ff8c00, #ff4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+  #menu p { font-size: 16px; margin: 6px 0; max-width: 600px; line-height: 1.5; }
+  #menu .controls { margin: 15px 0; font-size: 15px; color: #ccc; }
+  #menu button { margin-top: 15px; padding: 14px 40px; font-size: 22px; font-weight: bold; background: linear-gradient(135deg, #ffd700, #ff8c00); border: none; border-radius: 12px; color: #000; cursor: pointer; box-shadow: 0 8px 24px rgba(255,140,0,0.4); transition: all 0.2s; }
+  #menu button:hover { transform: translateY(-3px); }
+  #hitEffect, #dodgeEffect, #caughtEffect, #cameraBreakEffect, #textbookHit { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 70px; font-weight: bold; pointer-events: none; opacity: 0; z-index: 50; transition: all 0.4s; }
+  #hitEffect { color: #ff4444; text-shadow: 0 0 20px rgba(255,68,68,0.8), 4px 4px 0 #000; }
+  #dodgeEffect { color: #00aaff; text-shadow: 0 0 20px rgba(0,170,255,0.8), 4px 4px 0 #000; font-size: 55px; }
+  #caughtEffect { color: #ff0000; text-shadow: 0 0 30px rgba(255,0,0,1), 4px 4px 0 #000; }
+  #cameraBreakEffect { background: linear-gradient(135deg, #00ff88, #ffff00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  #textbookHit { color: #ff6600; text-shadow: 0 0 20px rgba(255,102,0,0.8), 4px 4px 0 #000; font-size: 60px; }
+  .show { opacity: 1 !important; transform: translate(-50%, -70%) scale(1.3) !important; }
+  #damageFlash { position: fixed; inset: 0; background: radial-gradient(circle, transparent 40%, rgba(255,0,0,0.5) 100%); pointer-events: none; opacity: 0; z-index: 45; transition: opacity 0.3s; }
   #damageFlash.show { opacity: 1; }
-  #mathProblem {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    background: rgba(0,0,0,0.95);
-    padding: 40px 60px;
-    border-radius: 20px;
-    border: 3px solid #ffd700;
-    text-align: center;
-    z-index: 200;
-    display: none;
-    box-shadow: 0 0 50px rgba(255,215,0,0.5);
-  }
-  #mathProblem h3 {
-    font-size: 36px;
-    color: #ffd700;
-    margin-bottom: 20px;
-  }
-  #mathProblem .problem {
-    font-size: 48px;
-    color: #fff;
-    margin: 30px 0;
-    font-weight: bold;
-  }
-  #mathProblem input {
-    font-size: 32px;
-    padding: 15px 30px;
-    width: 200px;
-    text-align: center;
-    border: 2px solid #ffd700;
-    border-radius: 10px;
-    background: rgba(255,255,255,0.1);
-    color: #fff;
-    outline: none;
-  }
-  #mathProblem button {
-    margin-top: 20px;
-    padding: 12px 40px;
-    font-size: 24px;
-    background: linear-gradient(135deg, #00ff88, #00aaff);
-    border: none;
-    border-radius: 10px;
-    color: #000;
-    cursor: pointer;
-    font-weight: bold;
-  }
-  #mathProblem .hint {
-    margin-top: 15px;
-    font-size: 16px;
-    color: #aaa;
-  }
-  #levelComplete {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.9);
-    display: none; flex-direction: column; align-items: center; justify-content: center;
-    z-index: 200; color: #fff; text-align: center;
-    backdrop-filter: blur(15px);
-  }
-  #levelComplete h2 {
-    font-size: 64px; margin-bottom: 20px;
-    background: linear-gradient(135deg, #00ff88, #00aaff, #ff00ff);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: pulse 1.5s infinite;
-  }
-  #levelComplete p { font-size: 24px; margin: 10px 0; }
-  #levelComplete button {
-    margin-top: 30px; padding: 18px 56px; font-size: 24px; font-weight: bold;
-    background: linear-gradient(135deg, #00ff88, #00aaff);
-    border: none; border-radius: 12px; color: #000; cursor: pointer;
-    box-shadow: 0 8px 24px rgba(0,255,136,0.4);
-    transition: all 0.2s;
-  }
-  #levelComplete button:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,255,136,0.6); }
-  #gameOver {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.95);
-    display: none; flex-direction: column; align-items: center; justify-content: center;
-    z-index: 300; color: #fff; text-align: center;
-    backdrop-filter: blur(15px);
-  }
-  #gameOver h2 {
-    font-size: 72px; margin-bottom: 20px;
-    background: linear-gradient(135deg, #ffd700, #ff8c00, #ff00ff, #00ff88);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: pulse 1.5s infinite;
-  }
-  #gameOver p { font-size: 26px; margin: 10px 0; }
-  #gameOver button {
-    margin-top: 30px; padding: 18px 56px; font-size: 24px; font-weight: bold;
-    background: linear-gradient(135deg, #ffd700, #ff8c00);
-    border: none; border-radius: 12px; color: #000; cursor: pointer;
-    box-shadow: 0 8px 24px rgba(255,140,0,0.4);
-    transition: all 0.2s;
-  }
-  #gameOver button:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(255,140,0,0.6); }
-  #gameOverScreen {
-    position: fixed; inset: 0; background: rgba(80,0,0,0.95);
-    display: none; flex-direction: column; align-items: center; justify-content: center;
-    z-index: 300; color: #fff; text-align: center;
-    backdrop-filter: blur(15px);
-  }
-  #gameOverScreen h2 {
-    font-size: 80px; margin-bottom: 20px;
-    background: linear-gradient(135deg, #ff0000, #ff4444, #ff8888);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: pulse 1.5s infinite;
-  }
-  #gameOverScreen p { font-size: 26px; margin: 10px 0; }
-  #gameOverScreen button {
-    margin-top: 30px; padding: 18px 56px; font-size: 24px; font-weight: bold;
-    background: linear-gradient(135deg, #ff4444, #ff0000);
-    border: none; border-radius: 12px; color: #fff; cursor: pointer;
-    box-shadow: 0 8px 24px rgba(255,0,0,0.4);
-    transition: all 0.2s;
-  }
-  #gameOverScreen button:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(255,0,0,0.6); }
+  #mathProblem { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.95); padding: 35px 50px; border-radius: 18px; border: 3px solid #ffd700; text-align: center; z-index: 200; display: none; box-shadow: 0 0 50px rgba(255,215,0,0.5); }
+  #mathProblem h3 { font-size: 30px; color: #ffd700; margin-bottom: 15px; }
+  #mathProblem .problem { font-size: 44px; color: #fff; margin: 20px 0; font-weight: bold; }
+  #mathProblem input { font-size: 28px; padding: 12px 20px; width: 180px; text-align: center; border: 2px solid #ffd700; border-radius: 8px; background: rgba(255,255,255,0.1); color: #fff; outline: none; }
+  #mathProblem button { margin-top: 15px; padding: 10px 30px; font-size: 20px; background: linear-gradient(135deg, #00ff88, #00aaff); border: none; border-radius: 8px; color: #000; cursor: pointer; font-weight: bold; }
+  #mathProblem .hint { margin-top: 12px; font-size: 14px; color: #aaa; }
+  #levelComplete, #gameOver, #gameOverScreen { position: fixed; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 300; color: #fff; text-align: center; backdrop-filter: blur(15px); }
+  #levelComplete { background: rgba(0,0,0,0.9); }
+  #gameOver { background: rgba(0,0,0,0.95); }
+  #gameOverScreen { background: rgba(80,0,0,0.95); }
+  #levelComplete h2, #gameOver h2, #gameOverScreen h2 { font-size: 64px; margin-bottom: 20px; background: linear-gradient(135deg, #00ff88, #00aaff, #ff00ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: pulse 1.5s infinite; }
+  #gameOverScreen h2 { background: linear-gradient(135deg, #ff0000, #ff4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  #levelComplete p, #gameOver p, #gameOverScreen p { font-size: 22px; margin: 8px 0; }
+  .bigBtn { margin-top: 25px; padding: 16px 50px; font-size: 22px; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; transition: all 0.2s; }
+  .bigBtn:hover { transform: translateY(-3px); }
+  #nextLevelBtn { background: linear-gradient(135deg, #00ff88, #00aaff); color: #000; }
+  #restartBtn, #retryBtn { background: linear-gradient(135deg, #ffd700, #ff8c00); color: #000; }
 </style>
 </head>
 <body>
@@ -286,18 +64,14 @@
   <h1>🐒 Обезьяна vs Учителя 🍌</h1>
   <p>Ты — шаловливая обезьяна в классе!<br>Кидай бананы в учителей и проходи <b>20 уровней</b>!</p>
   <div class="controls">
-    <p>🖱️ <b>Мышь</b> — прицеливание</p>
-    <p>🔫 <b>ЛКМ</b> — бросить банан</p>
-    <p>⌨️ <b>WASD</b> — движение</p>
-    <p>🦘 <b>Пробел</b> — прыжок</p>
-    <p>🚪 <b>E</b> — открыть дверь</p>
-    <p>🏃 <b>Shift</b> — бежать</p>
-    <p>⎋ <b>ESC</b> — пауза</p>
+    <p>🖱️ <b>Мышь</b> — прицеливание | 🔫 <b>ЛКМ</b> — бросить банан</p>
+    <p>⌨️ <b>WASD</b> — движение | 🦘 <b>Пробел</b> — прыжок</p>
+    <p>🚪 <b>E</b> — открыть дверь | 🏃 <b>Shift</b> — бежать</p>
   </div>
-  <p style="color:#ff4444; font-size:16px; margin-top:10px;">⚠️ Осторожно! Если учитель <b>смотрит на тебя</b> когда ты бросаешь — теряешь ❤️ жизнь!</p>
-  <p style="color:#ff6600; font-size:16px;">📹 В классе 4 камеры! Сломай их, иначе через <b>3 уровня</b> проиграешь!</p>
-  <p style="color:#00ff88; font-size:16px;">📚 Когда бананы закончатся — иди к доске и решай примеры!</p>
-  <p style="color:#00aaff; font-size:16px;">⚡ Учителя учатся уворачиваться и бьют учебниками!</p>
+  <p style="color:#ff4444;">⚠️ Если учитель <b>смотрит</b> при броске — теряешь ❤️</p>
+  <p style="color:#ff6600;">📹 Сломай 4 камеры, иначе через <b>3 уровня</b> проиграешь!</p>
+  <p style="color:#00ff88;">📚 Бананы кончились? Иди к доске и решай примеры!</p>
+  <p style="color:#ff8800;">📖 Учителя бьют учебником географии при близком контакте!</p>
   <button id="startBtn">🎮 НАЧАТЬ ИГРУ</button>
 </div>
 
@@ -307,12 +81,13 @@
   <div id="progress">Попадания: 0 / 5</div>
   <div id="bananas">🍌 Бананы: 20</div>
   <div id="lives">❤️❤️❤️❤️❤️</div>
-  <div id="cameras">📹 Камеры: 4/4 | ⏳ До проигрыша: 3 ур.</div>
-  <div id="cameraWarning">⚠️ ВНИМАНИЕ! Сломай камеры!</div>
+  <div id="cameras">📹 Камеры: 4/4 | ⏳ 3 ур.</div>
+  <div id="cameraWarning">⚠️ Сломай камеры!</div>
   <div id="combo"></div>
 </div>
 
-<div id="interactionHint">Нажми <b>E</b> чтобы открыть дверь</div>
+<div id="noBananaHint">📚 Иди к доске и реши пример! (Нажми E у доски)</div>
+<div id="interactionHint">Нажми <b>E</b></div>
 
 <div id="mathProblem">
   <h3>📚 РЕШИ ПРИМЕР!</h3>
@@ -328,24 +103,25 @@
 <div id="dodgeEffect">УКЛОНИЛСЯ!</div>
 <div id="caughtEffect">ПОЙМАЛИ!</div>
 <div id="cameraBreakEffect">💥 КАМЕРА СЛОМАНА!</div>
+<div id="textbookHit">📖 БАЦ!</div>
 <div id="damageFlash"></div>
 
 <div id="levelComplete">
   <h2>🎉 УРОВЕНЬ ПРОЙДЕН!</h2>
   <p id="levelStats"></p>
-  <button id="nextLevelBtn">СЛЕДУЮЩИЙ УРОВЕНЬ →</button>
+  <button id="nextLevelBtn" class="bigBtn">СЛЕДУЮЩИЙ УРОВЕНЬ →</button>
 </div>
 
 <div id="gameOver">
   <h2>🏆 ПОБЕДА!</h2>
   <p id="gameOverStats"></p>
-  <button id="restartBtn">ИГРАТЬ СНОВА</button>
+  <button id="restartBtn" class="bigBtn">ИГРАТЬ СНОВА</button>
 </div>
 
 <div id="gameOverScreen">
   <h2>💀 ПОЙМАН!</h2>
   <p id="caughtStats"></p>
-  <button id="retryBtn">ПОПРОБОВАТЬ СНОВА</button>
+  <button id="retryBtn" class="bigBtn">ПОПРОБОВАТЬ СНОВА</button>
 </div>
 
 <script type="importmap">
@@ -361,110 +137,76 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
-// ============ СИСТЕМА 20 УРОВНЕЙ ============
 const levelConfig = {
-  1:  { teachers: 3,  speed: 1.0, hitsNeeded: 5,  bananaRegen: 2.0, dodgeChance: 0.05, dodgeReaction: 1.2, dodgeDistance: 1.0, sightRange: 10, sightAngle: 0.5 },
-  2:  { teachers: 3,  speed: 1.1, hitsNeeded: 7,  bananaRegen: 1.9, dodgeChance: 0.10, dodgeReaction: 1.1, dodgeDistance: 1.1, sightRange: 11, sightAngle: 0.55 },
-  3:  { teachers: 4,  speed: 1.2, hitsNeeded: 9,  bananaRegen: 1.8, dodgeChance: 0.15, dodgeReaction: 1.0, dodgeDistance: 1.2, sightRange: 12, sightAngle: 0.6 },
-  4:  { teachers: 4,  speed: 1.3, hitsNeeded: 11, bananaRegen: 1.7, dodgeChance: 0.20, dodgeReaction: 0.95, dodgeDistance: 1.3, sightRange: 12, sightAngle: 0.65 },
-  5:  { teachers: 5,  speed: 1.4, hitsNeeded: 13, bananaRegen: 1.6, dodgeChance: 0.25, dodgeReaction: 0.9, dodgeDistance: 1.4, sightRange: 13, sightAngle: 0.7 },
-  6:  { teachers: 5,  speed: 1.5, hitsNeeded: 15, bananaRegen: 1.5, dodgeChance: 0.30, dodgeReaction: 0.85, dodgeDistance: 1.5, sightRange: 13, sightAngle: 0.75 },
-  7:  { teachers: 6,  speed: 1.6, hitsNeeded: 17, bananaRegen: 1.4, dodgeChance: 0.35, dodgeReaction: 0.8, dodgeDistance: 1.6, sightRange: 14, sightAngle: 0.8 },
-  8:  { teachers: 6,  speed: 1.7, hitsNeeded: 19, bananaRegen: 1.3, dodgeChance: 0.40, dodgeReaction: 0.75, dodgeDistance: 1.7, sightRange: 14, sightAngle: 0.85 },
-  9:  { teachers: 7,  speed: 1.8, hitsNeeded: 22, bananaRegen: 1.2, dodgeChance: 0.45, dodgeReaction: 0.7, dodgeDistance: 1.8, sightRange: 15, sightAngle: 0.9 },
-  10: { teachers: 7,  speed: 1.9, hitsNeeded: 25, bananaRegen: 1.1, dodgeChance: 0.50, dodgeReaction: 0.65, dodgeDistance: 1.9, sightRange: 15, sightAngle: 0.95 },
-  11: { teachers: 8,  speed: 2.0, hitsNeeded: 28, bananaRegen: 1.0, dodgeChance: 0.55, dodgeReaction: 0.6, dodgeDistance: 2.0, sightRange: 16, sightAngle: 1.0 },
-  12: { teachers: 8,  speed: 2.1, hitsNeeded: 31, bananaRegen: 1.0, dodgeChance: 0.58, dodgeReaction: 0.55, dodgeDistance: 2.1, sightRange: 16, sightAngle: 1.05 },
-  13: { teachers: 9,  speed: 2.2, hitsNeeded: 34, bananaRegen: 0.9, dodgeChance: 0.62, dodgeReaction: 0.5, dodgeDistance: 2.2, sightRange: 17, sightAngle: 1.1 },
-  14: { teachers: 9,  speed: 2.3, hitsNeeded: 37, bananaRegen: 0.9, dodgeChance: 0.65, dodgeReaction: 0.45, dodgeDistance: 2.3, sightRange: 17, sightAngle: 1.15 },
-  15: { teachers: 10, speed: 2.4, hitsNeeded: 40, bananaRegen: 0.8, dodgeChance: 0.68, dodgeReaction: 0.4, dodgeDistance: 2.4, sightRange: 18, sightAngle: 1.2 },
-  16: { teachers: 10, speed: 2.6, hitsNeeded: 44, bananaRegen: 0.8, dodgeChance: 0.70, dodgeReaction: 0.38, dodgeDistance: 2.5, sightRange: 18, sightAngle: 1.25 },
-  17: { teachers: 11, speed: 2.8, hitsNeeded: 48, bananaRegen: 0.7, dodgeChance: 0.72, dodgeReaction: 0.35, dodgeDistance: 2.6, sightRange: 19, sightAngle: 1.3 },
-  18: { teachers: 11, speed: 3.0, hitsNeeded: 52, bananaRegen: 0.7, dodgeChance: 0.75, dodgeReaction: 0.32, dodgeDistance: 2.7, sightRange: 19, sightAngle: 1.35 },
-  19: { teachers: 12, speed: 3.2, hitsNeeded: 57, bananaRegen: 0.6, dodgeChance: 0.78, dodgeReaction: 0.3, dodgeDistance: 2.8, sightRange: 20, sightAngle: 1.4 },
-  20: { teachers: 13, speed: 3.5, hitsNeeded: 65, bananaRegen: 0.5, dodgeChance: 0.82, dodgeReaction: 0.25, dodgeDistance: 3.0, sightRange: 22, sightAngle: 1.5 }
+  1:{teachers:3,speed:1.0,hitsNeeded:5,bananaRegen:2.0,dodgeChance:0.05,dodgeReaction:1.2,dodgeDistance:1.0,sightRange:10,sightAngle:0.5},
+  2:{teachers:3,speed:1.1,hitsNeeded:7,bananaRegen:1.9,dodgeChance:0.10,dodgeReaction:1.1,dodgeDistance:1.1,sightRange:11,sightAngle:0.55},
+  3:{teachers:4,speed:1.2,hitsNeeded:9,bananaRegen:1.8,dodgeChance:0.15,dodgeReaction:1.0,dodgeDistance:1.2,sightRange:12,sightAngle:0.6},
+  4:{teachers:4,speed:1.3,hitsNeeded:11,bananaRegen:1.7,dodgeChance:0.20,dodgeReaction:0.95,dodgeDistance:1.3,sightRange:12,sightAngle:0.65},
+  5:{teachers:5,speed:1.4,hitsNeeded:13,bananaRegen:1.6,dodgeChance:0.25,dodgeReaction:0.9,dodgeDistance:1.4,sightRange:13,sightAngle:0.7},
+  6:{teachers:5,speed:1.5,hitsNeeded:15,bananaRegen:1.5,dodgeChance:0.30,dodgeReaction:0.85,dodgeDistance:1.5,sightRange:13,sightAngle:0.75},
+  7:{teachers:6,speed:1.6,hitsNeeded:17,bananaRegen:1.4,dodgeChance:0.35,dodgeReaction:0.8,dodgeDistance:1.6,sightRange:14,sightAngle:0.8},
+  8:{teachers:6,speed:1.7,hitsNeeded:19,bananaRegen:1.3,dodgeChance:0.40,dodgeReaction:0.75,dodgeDistance:1.7,sightRange:14,sightAngle:0.85},
+  9:{teachers:7,speed:1.8,hitsNeeded:22,bananaRegen:1.2,dodgeChance:0.45,dodgeReaction:0.7,dodgeDistance:1.8,sightRange:15,sightAngle:0.9},
+  10:{teachers:7,speed:1.9,hitsNeeded:25,bananaRegen:1.1,dodgeChance:0.50,dodgeReaction:0.65,dodgeDistance:1.9,sightRange:15,sightAngle:0.95},
+  11:{teachers:8,speed:2.0,hitsNeeded:28,bananaRegen:1.0,dodgeChance:0.55,dodgeReaction:0.6,dodgeDistance:2.0,sightRange:16,sightAngle:1.0},
+  12:{teachers:8,speed:2.1,hitsNeeded:31,bananaRegen:1.0,dodgeChance:0.58,dodgeReaction:0.55,dodgeDistance:2.1,sightRange:16,sightAngle:1.05},
+  13:{teachers:9,speed:2.2,hitsNeeded:34,bananaRegen:0.9,dodgeChance:0.62,dodgeReaction:0.5,dodgeDistance:2.2,sightRange:17,sightAngle:1.1},
+  14:{teachers:9,speed:2.3,hitsNeeded:37,bananaRegen:0.9,dodgeChance:0.65,dodgeReaction:0.45,dodgeDistance:2.3,sightRange:17,sightAngle:1.15},
+  15:{teachers:10,speed:2.4,hitsNeeded:40,bananaRegen:0.8,dodgeChance:0.68,dodgeReaction:0.4,dodgeDistance:2.4,sightRange:18,sightAngle:1.2},
+  16:{teachers:10,speed:2.6,hitsNeeded:44,bananaRegen:0.8,dodgeChance:0.70,dodgeReaction:0.38,dodgeDistance:2.5,sightRange:18,sightAngle:1.25},
+  17:{teachers:11,speed:2.8,hitsNeeded:48,bananaRegen:0.7,dodgeChance:0.72,dodgeReaction:0.35,dodgeDistance:2.6,sightRange:19,sightAngle:1.3},
+  18:{teachers:11,speed:3.0,hitsNeeded:52,bananaRegen:0.7,dodgeChance:0.75,dodgeReaction:0.32,dodgeDistance:2.7,sightRange:19,sightAngle:1.35},
+  19:{teachers:12,speed:3.2,hitsNeeded:57,bananaRegen:0.6,dodgeChance:0.78,dodgeReaction:0.3,dodgeDistance:2.8,sightRange:20,sightAngle:1.4},
+  20:{teachers:13,speed:3.5,hitsNeeded:65,bananaRegen:0.5,dodgeChance:0.82,dodgeReaction:0.25,dodgeDistance:3.0,sightRange:22,sightAngle:1.5}
 };
 
-const MAX_LEVEL = 20;
-const MAX_LIVES = 5;
-const CAMERA_GRACE_LEVELS = 3;
-let currentLevel = 1;
-let hitsThisLevel = 0;
-let totalScore = 0;
-let dodgesThisLevel = 0;
-let lives = MAX_LIVES;
-let cameraLevelsLeft = CAMERA_GRACE_LEVELS;
+const MAX_LEVEL = 20, MAX_LIVES = 5, CAMERA_GRACE = 3;
+let currentLevel = 1, hitsThisLevel = 0, totalScore = 0, dodgesThisLevel = 0;
+let lives = MAX_LIVES, cameraLevelsLeft = CAMERA_GRACE;
 
-// ============ СЦЕНА ============
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
 scene.fog = new THREE.Fog(0x87ceeb, 30, 80);
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 200);
 camera.position.set(0, 1.6, 10);
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.1;
 document.body.appendChild(renderer.domElement);
 
-// ============ ОСВЕЩЕНИЕ ============
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-scene.add(ambientLight);
-
-const hemiLight = new THREE.HemisphereLight(0x87ceeb, 0x8b7355, 0.6);
-scene.add(hemiLight);
-
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+scene.add(new THREE.HemisphereLight(0x87ceeb, 0x8b7355, 0.6));
 const sunLight = new THREE.DirectionalLight(0xfff4e0, 1.2);
 sunLight.position.set(15, 25, 10);
 sunLight.castShadow = true;
 sunLight.shadow.mapSize.set(2048, 2048);
-sunLight.shadow.camera.left = -30;
-sunLight.shadow.camera.right = 30;
-sunLight.shadow.camera.top = 30;
-sunLight.shadow.camera.bottom = -30;
-sunLight.shadow.camera.near = 0.5;
-sunLight.shadow.camera.far = 60;
-sunLight.shadow.bias = -0.0005;
+sunLight.shadow.camera.left = -30; sunLight.shadow.camera.right = 30;
+sunLight.shadow.camera.top = 30; sunLight.shadow.camera.bottom = -30;
 scene.add(sunLight);
 
-const lampPositions = [[-6, 4.5, -4], [0, 4.5, -4], [6, 4.5, -4], [-6, 4.5, 4], [0, 4.5, 4], [6, 4.5, 4]];
-lampPositions.forEach(pos => {
-  const lampLight = new THREE.PointLight(0xffeecc, 0.6, 12);
-  lampLight.position.set(...pos);
-  scene.add(lampLight);
-  
-  const lampGeo = new THREE.CylinderGeometry(0.4, 0.5, 0.15, 16);
-  const lampMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.8, roughness: 0.3 });
-  const lamp = new THREE.Mesh(lampGeo, lampMat);
+[[-6,4.5,-4],[0,4.5,-4],[6,4.5,-4],[-6,4.5,4],[0,4.5,4],[6,4.5,4]].forEach(pos => {
+  const l = new THREE.PointLight(0xffeecc, 0.6, 12);
+  l.position.set(...pos);
+  scene.add(l);
+  const lamp = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.5, 0.15, 16), new THREE.MeshStandardMaterial({color:0x333333,metalness:0.8}));
   lamp.position.set(...pos);
   scene.add(lamp);
 });
 
-// ============ ТЕКСТУРЫ ============
-function makeFloorTexture() {
-  const c = document.createElement('canvas');
-  c.width = 512; c.height = 512;
+function makeFloorTex() {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 512;
   const ctx = c.getContext('2d');
-  ctx.fillStyle = '#8b6f47';
-  ctx.fillRect(0, 0, 512, 512);
+  ctx.fillStyle = '#8b6f47'; ctx.fillRect(0, 0, 512, 512);
   for (let i = 0; i < 8; i++) {
-    ctx.fillStyle = i % 2 ? '#7a5f3a' : '#9b7f57';
-    ctx.fillRect(0, i * 64, 512, 64);
-    ctx.strokeStyle = '#5a4528';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(0, i * 64, 512, 64);
-    for (let j = 0; j < 20; j++) {
-      ctx.strokeStyle = `rgba(60, 40, 20, ${Math.random() * 0.3})`;
-      ctx.beginPath();
-      ctx.moveTo(0, i * 64 + Math.random() * 64);
-      ctx.bezierCurveTo(128, i * 64 + Math.random() * 64, 384, i * 64 + Math.random() * 64, 512, i * 64 + Math.random() * 64);
-      ctx.stroke();
-    }
+    ctx.fillStyle = i%2?'#7a5f3a':'#9b7f57';
+    ctx.fillRect(0, i*64, 512, 64);
+    ctx.strokeStyle = '#5a4528'; ctx.lineWidth = 2;
+    ctx.strokeRect(0, i*64, 512, 64);
   }
   const tex = new THREE.CanvasTexture(c);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
@@ -472,947 +214,863 @@ function makeFloorTexture() {
   return tex;
 }
 
-function makeWallTexture() {
-  const c = document.createElement('canvas');
-  c.width = 512; c.height = 512;
+function makeWallTex() {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 512;
   const ctx = c.getContext('2d');
   const grad = ctx.createLinearGradient(0, 0, 0, 512);
-  grad.addColorStop(0, '#f4e8d0');
-  grad.addColorStop(1, '#e8d9b8');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, 512, 512);
-  for (let i = 0; i < 300; i++) {
-    ctx.fillStyle = `rgba(180, 160, 130, ${Math.random() * 0.15})`;
-    ctx.fillRect(Math.random() * 512, Math.random() * 512, Math.random() * 20, Math.random() * 20);
-  }
-  ctx.fillStyle = '#5c3a1e';
-  ctx.fillRect(0, 480, 512, 32);
+  grad.addColorStop(0, '#f4e8d0'); grad.addColorStop(1, '#e8d9b8');
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, 512, 512);
+  ctx.fillStyle = '#5c3a1e'; ctx.fillRect(0, 480, 512, 32);
   return new THREE.CanvasTexture(c);
 }
 
-// ============ КЛАССНАЯ КОМНАТА ============
-const floor = new THREE.Mesh(
-  new THREE.PlaneGeometry(40, 40),
-  new THREE.MeshStandardMaterial({ map: makeFloorTexture(), roughness: 0.7 })
-);
-floor.rotation.x = -Math.PI / 2;
-floor.receiveShadow = true;
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshStandardMaterial({map: makeFloorTex(), roughness: 0.7}));
+floor.rotation.x = -Math.PI/2; floor.receiveShadow = true;
 scene.add(floor);
 
-const wallTex = makeWallTexture();
-const wallMat = new THREE.MeshStandardMaterial({ map: wallTex, roughness: 0.9 });
+const wallMat = new THREE.MeshStandardMaterial({map: makeWallTex(), roughness: 0.9});
+const bw = new THREE.Mesh(new THREE.PlaneGeometry(40, 8), wallMat);
+bw.position.set(0, 4, -15); bw.receiveShadow = true; scene.add(bw);
+const fw = new THREE.Mesh(new THREE.PlaneGeometry(40, 8), wallMat.clone());
+fw.position.set(0, 4, 15); fw.rotation.y = Math.PI; fw.receiveShadow = true; scene.add(fw);
+const lw = new THREE.Mesh(new THREE.PlaneGeometry(30, 8), wallMat.clone());
+lw.position.set(-20, 4, 0); lw.rotation.y = Math.PI/2; lw.receiveShadow = true; scene.add(lw);
+const rw = new THREE.Mesh(new THREE.PlaneGeometry(30, 8), wallMat.clone());
+rw.position.set(20, 4, 0); rw.rotation.y = -Math.PI/2; rw.receiveShadow = true; scene.add(rw);
+const ceil = new THREE.Mesh(new THREE.PlaneGeometry(40, 30), new THREE.MeshStandardMaterial({color:0xfafafa}));
+ceil.rotation.x = Math.PI/2; ceil.position.y = 5; scene.add(ceil);
 
-const backWall = new THREE.Mesh(new THREE.PlaneGeometry(40, 8), wallMat);
-backWall.position.set(0, 4, -15);
-backWall.receiveShadow = true;
-scene.add(backWall);
-
-const frontWall = new THREE.Mesh(new THREE.PlaneGeometry(40, 8), wallMat.clone());
-frontWall.position.set(0, 4, 15);
-frontWall.rotation.y = Math.PI;
-frontWall.receiveShadow = true;
-scene.add(frontWall);
-
-const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(30, 8), wallMat.clone());
-leftWall.position.set(-20, 4, 0);
-leftWall.rotation.y = Math.PI / 2;
-leftWall.receiveShadow = true;
-scene.add(leftWall);
-
-const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(30, 8), wallMat.clone());
-rightWall.position.set(20, 4, 0);
-rightWall.rotation.y = -Math.PI / 2;
-rightWall.receiveShadow = true;
-scene.add(rightWall);
-
-const ceiling = new THREE.Mesh(
-  new THREE.PlaneGeometry(40, 30),
-  new THREE.MeshStandardMaterial({ color: 0xfafafa, roughness: 0.9 })
-);
-ceiling.rotation.x = Math.PI / 2;
-ceiling.position.y = 5;
-scene.add(ceiling);
-
-const boardFrame = new THREE.Mesh(
-  new THREE.BoxGeometry(12, 5, 0.3),
-  new THREE.MeshStandardMaterial({ color: 0x5c3a1e, roughness: 0.6 })
-);
-boardFrame.position.set(0, 3, -14.8);
-boardFrame.castShadow = true;
-boardFrame.receiveShadow = true;
-scene.add(boardFrame);
-
-const boardCanvas = document.createElement('canvas');
-boardCanvas.width = 1024; boardCanvas.height = 512;
-const bctx = boardCanvas.getContext('2d');
-const bgrad = bctx.createRadialGradient(512, 256, 50, 512, 256, 600);
-bgrad.addColorStop(0, '#3a5a3a');
-bgrad.addColorStop(1, '#1a3a1a');
-bctx.fillStyle = bgrad;
-bctx.fillRect(0, 0, 1024, 512);
-for (let i = 0; i < 60; i++) {
-  bctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.08})`;
-  bctx.beginPath();
-  bctx.arc(Math.random() * 1024, Math.random() * 512, Math.random() * 80, 0, Math.PI * 2);
-  bctx.fill();
-}
-bctx.font = 'bold 80px Arial';
-bctx.fillStyle = 'rgba(255,255,255,0.9)';
+// Доска
+const boardFrame = new THREE.Mesh(new THREE.BoxGeometry(12, 5, 0.3), new THREE.MeshStandardMaterial({color:0x5c3a1e}));
+boardFrame.position.set(0, 3, -14.8); boardFrame.castShadow = true; scene.add(boardFrame);
+const bc = document.createElement('canvas'); bc.width = 1024; bc.height = 512;
+const bctx = bc.getContext('2d');
+const bg = bctx.createRadialGradient(512, 256, 50, 512, 256, 600);
+bg.addColorStop(0, '#3a5a3a'); bg.addColorStop(1, '#1a3a1a');
+bctx.fillStyle = bg; bctx.fillRect(0, 0, 1024, 512);
+bctx.font = 'bold 80px Arial'; bctx.fillStyle = 'rgba(255,255,255,0.9)';
 bctx.fillText('МАТЕМАТИКА', 180, 180);
-bctx.font = '50px Arial';
-bctx.fillText('2 + 2 = 🍌 ?', 320, 300);
-bctx.font = '40px Arial';
-bctx.fillText('x = бананы', 400, 400);
-const boardTex = new THREE.CanvasTexture(boardCanvas);
-const board = new THREE.Mesh(
-  new THREE.PlaneGeometry(11.5, 4.5),
-  new THREE.MeshStandardMaterial({ map: boardTex, roughness: 0.5 })
-);
-board.position.set(0, 3, -14.6);
-scene.add(board);
+bctx.font = '50px Arial'; bctx.fillText('2 + 2 = 🍌 ?', 320, 300);
+bctx.font = '40px Arial'; bctx.fillText('x = бананы', 400, 400);
+const boardTex = new THREE.CanvasTexture(bc);
+const board = new THREE.Mesh(new THREE.PlaneGeometry(11.5, 4.5), new THREE.MeshStandardMaterial({map: boardTex}));
+board.position.set(0, 3, -14.6); scene.add(board);
+const boardPosition = new THREE.Vector3(0, 2, -13.5);
 
-// ============ ДВЕРЬ ============
-const doorGroup = new THREE.Group();
-const doorFrame = new THREE.Mesh(
-  new THREE.BoxGeometry(2.2, 3.2, 0.3),
-  new THREE.MeshStandardMaterial({ color: 0x3d2817, roughness: 0.7 })
-);
-doorFrame.position.set(15, 1.6, 14.85);
-doorFrame.castShadow = true;
-doorFrame.receiveShadow = true;
-scene.add(doorFrame);
-
-const door = new THREE.Mesh(
-  new THREE.BoxGeometry(2, 3, 0.1),
-  new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.6 })
-);
-door.position.set(15, 1.5, 14.9);
-door.castShadow = true;
-door.receiveShadow = true;
-doorGroup.add(door);
-
-// Ручка двери
-const doorHandle = new THREE.Mesh(
-  new THREE.SphereGeometry(0.1, 12, 12),
-  new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.9, roughness: 0.2 })
-);
-doorHandle.position.set(15.7, 1.5, 15);
-doorGroup.add(doorHandle);
-
-scene.add(doorGroup);
-
+// ДВЕРЬ
+const doorPivot = new THREE.Group();
+doorPivot.position.set(14, 0, 14.85);
+scene.add(doorPivot);
+const doorMesh = new THREE.Mesh(new THREE.BoxGeometry(2, 3, 0.1), new THREE.MeshStandardMaterial({color:0x8b5a2b, roughness:0.6}));
+doorMesh.position.set(1, 1.5, 0);
+doorMesh.castShadow = true; doorMesh.receiveShadow = true;
+doorPivot.add(doorMesh);
+const doorHandle = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 12), new THREE.MeshStandardMaterial({color:0xffd700, metalness:0.9}));
+doorHandle.position.set(1.7, 1.5, 0.08);
+doorPivot.add(doorHandle);
+const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(2.3, 3.2, 0.3), new THREE.MeshStandardMaterial({color:0x3d2817}));
+doorFrame.position.set(15, 1.6, 14.85); scene.add(doorFrame);
 const doorPosition = new THREE.Vector3(15, 1.5, 14.9);
-let doorOpen = false;
-let doorAngle = 0;
+let doorOpen = false, doorAngle = 0;
 
-// ============ ПАРТЫ (НЕПРОЗРАЧНЫЕ) ============
+// Уличная сцена (за дверью)
+const outdoorGroup = new THREE.Group();
+const grass = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), new THREE.MeshStandardMaterial({color:0x4a8c3a}));
+grass.rotation.x = -Math.PI/2; grass.position.set(15, 0, 40); grass.receiveShadow = true;
+outdoorGroup.add(grass);
+// Деревья
+for (let i = 0; i < 8; i++) {
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 3, 8), new THREE.MeshStandardMaterial({color:0x5c3a1e}));
+  trunk.position.set(Math.random()*40 - 5, 1.5, 25 + Math.random()*30);
+  trunk.castShadow = true; outdoorGroup.add(trunk);
+  const leaves = new THREE.Mesh(new THREE.SphereGeometry(1.5, 12, 12), new THREE.MeshStandardMaterial({color:0x2d5016}));
+  leaves.position.set(trunk.position.x, 4, trunk.position.z);
+  leaves.castShadow = true; outdoorGroup.add(leaves);
+}
+scene.add(outdoorGroup);
+
+// ПАРТЫ (НЕПРОЗРАЧНЫЕ)
 const desks = [];
 function makeDesk(x, z) {
-  const group = new THREE.Group();
-  const top = new THREE.Mesh(
-    new THREE.BoxGeometry(1.8, 0.1, 1.2),
-    new THREE.MeshStandardMaterial({ color: 0xc49a6c, roughness: 0.5, transparent: false, opacity: 1.0 })
-  );
-  top.position.y = 0.9;
-  top.castShadow = true;
-  top.receiveShadow = true;
-  group.add(top);
-  
-  const legGeo = new THREE.BoxGeometry(0.08, 0.9, 0.08);
-  const legMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.6, transparent: false, opacity: 1.0 });
-  [[-0.8, -0.5], [0.8, -0.5], [-0.8, 0.5], [0.8, 0.5]].forEach(([lx, lz]) => {
-    const leg = new THREE.Mesh(legGeo, legMat);
-    leg.position.set(lx, 0.45, lz);
-    leg.castShadow = true;
-    group.add(leg);
+  const g = new THREE.Group();
+  const topMat = new THREE.MeshStandardMaterial({color:0xc49a6c, roughness:0.5});
+  const top = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.1, 1.2), topMat);
+  top.position.y = 0.9; top.castShadow = true; top.receiveShadow = true; g.add(top);
+  const legMat = new THREE.MeshStandardMaterial({color:0x333333, metalness:0.6});
+  [[-0.8,-0.5],[0.8,-0.5],[-0.8,0.5],[0.8,0.5]].forEach(([lx,lz]) => {
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.9, 0.08), legMat);
+    leg.position.set(lx, 0.45, lz); leg.castShadow = true; g.add(leg);
   });
-  
-  const seat = new THREE.Mesh(
-    new THREE.BoxGeometry(0.6, 0.08, 0.6),
-    new THREE.MeshStandardMaterial({ color: 0xb8865a, transparent: false, opacity: 1.0 })
-  );
-  seat.position.set(0, 0.55, 0.9);
-  seat.castShadow = true;
-  group.add(seat);
-  
-  const back = new THREE.Mesh(
-    new THREE.BoxGeometry(0.6, 0.7, 0.08),
-    new THREE.MeshStandardMaterial({ color: 0xb8865a, transparent: false, opacity: 1.0 })
-  );
-  back.position.set(0, 0.9, 1.2);
-  back.castShadow = true;
-  group.add(back);
-  
-  group.position.set(x, 0, z);
-  scene.add(group);
-  desks.push({ x, z, radius: 1.2 });
-  return group;
+  const seatMat = new THREE.MeshStandardMaterial({color:0xb8865a});
+  const seat = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.08, 0.6), seatMat);
+  seat.position.set(0, 0.55, 0.9); seat.castShadow = true; g.add(seat);
+  const back = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.7, 0.08), seatMat);
+  back.position.set(0, 0.9, 1.2); back.castShadow = true; g.add(back);
+  g.position.set(x, 0, z); scene.add(g);
+  desks.push({x, z, radius: 1.2});
 }
-
-for (let row = 0; row < 3; row++) {
-  for (let col = 0; col < 4; col++) {
-    makeDesk(-6 + col * 4, 2 + row * 3);
-  }
-}
-
-for (let i = 0; i < 3; i++) {
-  const windowFrame = new THREE.Mesh(
-    new THREE.BoxGeometry(0.2, 3, 2.5),
-    new THREE.MeshStandardMaterial({ color: 0xffffff })
-  );
-  windowFrame.position.set(-19.9, 3, -8 + i * 6);
-  scene.add(windowFrame);
-  
-  const glass = new THREE.Mesh(
-    new THREE.PlaneGeometry(2.3, 2.8),
-    new THREE.MeshStandardMaterial({ 
-      color: 0x87ceeb, transparent: true, opacity: 0.4,
-      metalness: 0.3, roughness: 0.1
-    })
-  );
-  glass.rotation.y = Math.PI / 2;
-  glass.position.set(-19.8, 3, -8 + i * 6);
-  scene.add(glass);
-}
-
-const teacherDesk = new THREE.Mesh(
-  new THREE.BoxGeometry(3, 0.9, 1.5),
-  new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.5, transparent: false, opacity: 1.0 })
-);
-teacherDesk.position.set(0, 0.45, -10);
-teacherDesk.castShadow = true;
-teacherDesk.receiveShadow = true;
+for (let r = 0; r < 3; r++) for (let c = 0; c < 4; c++) makeDesk(-6 + c*4, 2 + r*3);
+const teacherDesk = new THREE.Mesh(new THREE.BoxGeometry(3, 0.9, 1.5), new THREE.MeshStandardMaterial({color:0x8b5a2b}));
+teacherDesk.position.set(0, 0.45, -10); teacherDesk.castShadow = true; teacherDesk.receiveShadow = true;
 scene.add(teacherDesk);
-desks.push({ x: 0, z: -10, radius: 1.8 });
+desks.push({x:0, z:-10, radius:1.8});
 
-// ============ КАМЕРЫ ============
+// КАМЕРЫ
 const securityCameras = [];
-const cameraPositions = [
-  { x: -18, y: 4.5, z: -13, lookAt: { x: 0, y: 1.5, z: 0 } },
-  { x: 18,  y: 4.5, z: -13, lookAt: { x: 0, y: 1.5, z: 0 } },
-  { x: -18, y: 4.5, z: 13,  lookAt: { x: 0, y: 1.5, z: 0 } },
-  { x: 18,  y: 4.5, z: 13,  lookAt: { x: 0, y: 1.5, z: 0 } }
+const camPos = [
+  {x:-18,y:4.5,z:-13},{x:18,y:4.5,z:-13},{x:-18,y:4.5,z:13},{x:18,y:4.5,z:13}
 ];
-
-function makeSecurityCamera(pos, lookAt) {
-  const group = new THREE.Group();
-  
-  const mount = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.15, 0.15, 0.3, 12),
-    new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8, roughness: 0.3 })
-  );
-  mount.position.y = 0;
-  group.add(mount);
-  
-  const arm = new THREE.Mesh(
-    new THREE.BoxGeometry(0.1, 0.5, 0.1),
-    new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.7 })
-  );
-  arm.position.y = -0.3;
-  group.add(arm);
-  
-  const pivot = new THREE.Group();
-  pivot.position.y = -0.55;
-  group.add(pivot);
-  
-  const body = new THREE.Mesh(
-    new THREE.BoxGeometry(0.4, 0.25, 0.25),
-    new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.7, roughness: 0.4 })
-  );
+function makeSecCam(pos) {
+  const g = new THREE.Group();
+  const mount = new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.15,0.3,12), new THREE.MeshStandardMaterial({color:0x222222,metalness:0.8}));
+  g.add(mount);
+  const arm = new THREE.Mesh(new THREE.BoxGeometry(0.1,0.5,0.1), new THREE.MeshStandardMaterial({color:0x333333}));
+  arm.position.y = -0.3; g.add(arm);
+  const pivot = new THREE.Group(); pivot.position.y = -0.55; g.add(pivot);
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.4,0.25,0.25), new THREE.MeshStandardMaterial({color:0x1a1a1a,metalness:0.7}));
   pivot.add(body);
-  
-  const lens = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.1, 0.12, 0.15, 16),
-    new THREE.MeshStandardMaterial({ color: 0x000000, metalness: 0.9, roughness: 0.1 })
-  );
-  lens.rotation.z = Math.PI / 2;
-  lens.position.x = 0.25;
-  pivot.add(lens);
-  
-  const lensGlass = new THREE.Mesh(
-    new THREE.CircleGeometry(0.09, 16),
-    new THREE.MeshStandardMaterial({ 
-      color: 0x2244aa, metalness: 0.9, roughness: 0.1,
-      emissive: 0x112244, emissiveIntensity: 0.3
-    })
-  );
-  lensGlass.rotation.y = Math.PI / 2;
-  lensGlass.position.x = 0.32;
-  pivot.add(lensGlass);
-  
-  const ledMat = new THREE.MeshStandardMaterial({ 
-    color: 0xff0000, 
-    emissive: 0xff0000, 
-    emissiveIntensity: 1.5 
-  });
-  const led = new THREE.Mesh(
-    new THREE.SphereGeometry(0.04, 8, 8),
-    ledMat
-  );
-  led.position.set(0, 0.15, 0);
-  pivot.add(led);
-  
+  const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.12,0.15,16), new THREE.MeshStandardMaterial({color:0x000000,metalness:0.9}));
+  lens.rotation.z = Math.PI/2; lens.position.x = 0.25; pivot.add(lens);
+  const ledMat = new THREE.MeshStandardMaterial({color:0xff0000,emissive:0xff0000,emissiveIntensity:1.5});
+  const led = new THREE.Mesh(new THREE.SphereGeometry(0.04,8,8), ledMat);
+  led.position.set(0,0.15,0); pivot.add(led);
   const ledLight = new THREE.PointLight(0xff0000, 0.5, 3);
-  ledLight.position.set(0, 0.15, 0);
-  pivot.add(ledLight);
-  
-  group.position.set(pos.x, pos.y, pos.z);
-  
-  const lookTarget = new THREE.Vector3(lookAt.x, lookAt.y, lookAt.z);
-  const camPos = new THREE.Vector3(pos.x, pos.y, pos.z);
-  const dir = new THREE.Vector3().subVectors(lookTarget, camPos);
+  ledLight.position.set(0,0.15,0); pivot.add(ledLight);
+  g.position.set(pos.x, pos.y, pos.z);
+  const dir = new THREE.Vector3(-pos.x, -3, -pos.z).normalize();
   const rotY = Math.atan2(dir.x, dir.z);
-  group.rotation.y = rotY;
-  
-  scene.add(group);
-  
-  return {
-    group,
-    pivot,
-    led,
-    ledMat,
-    ledLight,
-    position: new THREE.Vector3(pos.x, pos.y, pos.z),
-    baseRotationY: rotY,
-    broken: false,
-    breakTime: 0,
-    scanPhase: Math.random() * Math.PI * 2,
-    scanSpeed: 0.5 + Math.random() * 0.3,
-    sightRange: 25,
-    sightAngle: 0.8
-  };
+  g.rotation.y = rotY;
+  scene.add(g);
+  return {group:g, pivot, led, ledMat, ledLight, position:new THREE.Vector3(pos.x,pos.y,pos.z), baseRotationY:rotY, broken:false, scanPhase:Math.random()*Math.PI*2, scanSpeed:0.5+Math.random()*0.3, sightRange:25, sightAngle:0.8};
 }
-
-function spawnSecurityCameras() {
+function spawnCameras() {
   securityCameras.forEach(c => scene.remove(c.group));
   securityCameras.length = 0;
-  
-  for (const cp of cameraPositions) {
-    securityCameras.push(makeSecurityCamera(cp, cp.lookAt));
-  }
+  for (const p of camPos) securityCameras.push(makeSecCam(p));
 }
+function activeCamsCount() { return securityCameras.filter(c => !c.broken).length; }
 
-function getActiveCamerasCount() {
-  return securityCameras.filter(c => !c.broken).length;
-}
-
-// ============ УЧИТЕЛЯ ============
+// УЧИТЕЛЯ
 const teachers = [];
-const teacherColors = [
-  { shirt: 0x8b0000, pants: 0x2c2c2c, skin: 0xf4c2a1, hair: 0x3d2817 },
-  { shirt: 0x1e3a8a, pants: 0x4a3728, skin: 0xe8b896, hair: 0x8b4513 },
-  { shirt: 0x065f46, pants: 0x1f2937, skin: 0xf4c2a1, hair: 0x654321 },
-  { shirt: 0x7c2d12, pants: 0x292524, skin: 0xd4a574, hair: 0x1a1a1a },
-  { shirt: 0x6b21a8, pants: 0x18181b, skin: 0xf0c0a0, hair: 0x2d1810 },
-  { shirt: 0xdc2626, pants: 0x1e293b, skin: 0xf4c2a1, hair: 0x4a3520 },
-  { shirt: 0x0891b2, pants: 0x334155, skin: 0xe8b896, hair: 0x5c3a1e },
-  { shirt: 0x059669, pants: 0x27272a, skin: 0xf0c0a0, hair: 0x3a2818 },
-  { shirt: 0xb91c1c, pants: 0x1e3a8a, skin: 0xd4a574, hair: 0x2d1810 },
-  { shirt: 0x7c3aed, pants: 0x18181b, skin: 0xf4c2a1, hair: 0x1a1a1a },
-  { shirt: 0x0d9488, pants: 0x292524, skin: 0xe8b896, hair: 0x4a3520 },
-  { shirt: 0xea580c, pants: 0x1f2937, skin: 0xf4c2a1, hair: 0x654321 },
-  { shirt: 0xbe185d, pants: 0x334155, skin: 0xd4a574, hair: 0x3d2817 }
+const tColors = [
+  {shirt:0x8b0000,pants:0x2c2c2c,skin:0xf4c2a1,hair:0x3d2817},
+  {shirt:0x1e3a8a,pants:0x4a3728,skin:0xe8b896,hair:0x8b4513},
+  {shirt:0x065f46,pants:0x1f2937,skin:0xf4c2a1,hair:0x654321},
+  {shirt:0x7c2d12,pants:0x292524,skin:0xd4a574,hair:0x1a1a1a},
+  {shirt:0x6b21a8,pants:0x18181b,skin:0xf0c0a0,hair:0x2d1810},
+  {shirt:0xdc2626,pants:0x1e293b,skin:0xf4c2a1,hair:0x4a3520},
+  {shirt:0x0891b2,pants:0x334155,skin:0xe8b896,hair:0x5c3a1e},
+  {shirt:0x059669,pants:0x27272a,skin:0xf0c0a0,hair:0x3a2818},
+  {shirt:0xb91c1c,pants:0x1e3a8a,skin:0xd4a574,hair:0x2d1810},
+  {shirt:0x7c3aed,pants:0x18181b,skin:0xf4c2a1,hair:0x1a1a1a},
+  {shirt:0x0d9488,pants:0x292524,skin:0xe8b896,hair:0x4a3520},
+  {shirt:0xea580c,pants:0x1f2937,skin:0xf4c2a1,hair:0x654321},
+  {shirt:0xbe185d,pants:0x334155,skin:0xd4a574,hair:0x3d2817}
 ];
+const WALK_BOUNDS = {minX:-16,maxX:16,minZ:-13,maxZ:12};
 
-const WALK_BOUNDS = { minX: -16, maxX: 16, minZ: -13, maxZ: 12 };
-
-function makeTeacher(colorScheme, startX, startZ, speedMultiplier) {
-  const group = new THREE.Group();
-  
-  const body = new THREE.Mesh(
-    new THREE.BoxGeometry(0.7, 1.0, 0.4),
-    new THREE.MeshStandardMaterial({ color: colorScheme.shirt, roughness: 0.7 })
-  );
-  body.position.y = 1.3;
-  body.castShadow = true;
-  group.add(body);
-  
-  const tie = new THREE.Mesh(
-    new THREE.BoxGeometry(0.12, 0.5, 0.05),
-    new THREE.MeshStandardMaterial({ color: 0xffd700, roughness: 0.4 })
-  );
-  tie.position.set(0, 1.3, 0.22);
-  group.add(tie);
-  
-  const head = new THREE.Mesh(
-    new THREE.SphereGeometry(0.28, 20, 20),
-    new THREE.MeshStandardMaterial({ color: colorScheme.skin, roughness: 0.6 })
-  );
-  head.position.y = 2.05;
-  head.castShadow = true;
-  group.add(head);
-  
-  const hair = new THREE.Mesh(
-    new THREE.SphereGeometry(0.3, 20, 20, 0, Math.PI * 2, 0, Math.PI / 2),
-    new THREE.MeshStandardMaterial({ color: colorScheme.hair, roughness: 0.8 })
-  );
-  hair.position.y = 2.1;
-  group.add(hair);
-  
-  const glassesMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.8 });
-  const glassL = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.015, 8, 16), glassesMat);
-  glassL.position.set(-0.1, 2.08, 0.26);
-  group.add(glassL);
-  const glassR = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.015, 8, 16), glassesMat);
-  glassR.position.set(0.1, 2.08, 0.26);
-  group.add(glassR);
-  const bridge = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.015, 0.015), glassesMat);
-  bridge.position.set(0, 2.08, 0.26);
-  group.add(bridge);
-  
-  const eyeMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
-  const pupilMat = new THREE.MeshStandardMaterial({ color: 0x000000 });
-  const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), eyeMat);
-  eyeL.position.set(-0.1, 2.08, 0.27);
-  group.add(eyeL);
-  const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), eyeMat);
-  eyeR.position.set(0.1, 2.08, 0.27);
-  group.add(eyeR);
-  const pupilL = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 8), pupilMat);
-  pupilL.position.set(-0.1, 2.08, 0.3);
-  group.add(pupilL);
-  const pupilR = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 8), pupilMat);
-  pupilR.position.set(0.1, 2.08, 0.3);
-  group.add(pupilR);
-  
-  const mouth = new THREE.Mesh(
-    new THREE.BoxGeometry(0.12, 0.02, 0.02),
-    new THREE.MeshStandardMaterial({ color: 0x8b0000 })
-  );
-  mouth.position.set(0, 1.92, 0.27);
-  group.add(mouth);
-  
-  const armGeo = new THREE.BoxGeometry(0.18, 0.8, 0.18);
-  const armMat = new THREE.MeshStandardMaterial({ color: colorScheme.shirt, roughness: 0.7 });
-  const armL = new THREE.Mesh(armGeo, armMat);
-  armL.position.set(-0.45, 1.3, 0);
-  armL.castShadow = true;
-  group.add(armL);
-  const armR = new THREE.Mesh(armGeo, armMat);
-  armR.position.set(0.45, 1.3, 0);
-  armR.castShadow = true;
-  group.add(armR);
-  
-  const handMat = new THREE.MeshStandardMaterial({ color: colorScheme.skin });
-  const handL = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 12), handMat);
-  handL.position.set(-0.45, 0.85, 0);
-  group.add(handL);
-  const handR = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 12), handMat);
-  handR.position.set(0.45, 0.85, 0);
-  group.add(handR);
-  
-  // Учебник географии в правой руке
-  const textbook = new THREE.Mesh(
-    new THREE.BoxGeometry(0.25, 0.35, 0.05),
-    new THREE.MeshStandardMaterial({ color: 0x0066cc, roughness: 0.6 })
-  );
-  textbook.position.set(0.45, 0.85, 0.15);
-  group.add(textbook);
-  
-  const legGeo = new THREE.BoxGeometry(0.22, 0.8, 0.22);
-  const legMat = new THREE.MeshStandardMaterial({ color: colorScheme.pants, roughness: 0.7 });
-  const legL = new THREE.Mesh(legGeo, legMat);
-  legL.position.set(-0.18, 0.4, 0);
-  legL.castShadow = true;
-  group.add(legL);
-  const legR = new THREE.Mesh(legGeo, legMat);
-  legR.position.set(0.18, 0.4, 0);
-  legR.castShadow = true;
-  group.add(legR);
-  
-  const shoeMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.4 });
-  const shoeL = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.1, 0.35), shoeMat);
-  shoeL.position.set(-0.18, 0.05, 0.05);
-  group.add(shoeL);
-  const shoeR = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.1, 0.35), shoeMat);
-  shoeR.position.set(0.18, 0.05, 0.05);
-  group.add(shoeR);
-  
-  group.position.set(startX, 0, startZ);
-  
-  return {
-    group,
-    armL, armR, legL, legR, head, mouth,
-    velocity: new THREE.Vector3(),
-    target: new THREE.Vector3(startX, 0, startZ),
-    speed: (1.2 + Math.random() * 0.8) * speedMultiplier,
-    walkPhase: Math.random() * Math.PI * 2,
-    hitTime: 0,
-    originalY: 0,
-    targetTimer: Math.random() * 2,
-    currentTarget: null,
-    stuckTimer: 0,
-    lastPos: new THREE.Vector3(startX, 0, startZ),
-    dodgeCooldown: 0,
-    isDodging: false,
-    dodgeTime: 0,
-    dodgeDuration: 0.6,
-    dodgeDir: new THREE.Vector3(),
-    dodgeSpeed: 8,
-    dodgeOffset: new THREE.Vector3(),
-    alertTime: 0,
-    startBasePos: new THREE.Vector3(startX, 0, startZ),
-    attackCooldown: 0,
-    isAttacking: false,
-    attackTime: 0
-  };
+function makeTeacher(cs, sx, sz, sm) {
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.7,1.0,0.4), new THREE.MeshStandardMaterial({color:cs.shirt}));
+  body.position.y = 1.3; body.castShadow = true; g.add(body);
+  const tie = new THREE.Mesh(new THREE.BoxGeometry(0.12,0.5,0.05), new THREE.MeshStandardMaterial({color:0xffd700}));
+  tie.position.set(0,1.3,0.22); g.add(tie);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.28,20,20), new THREE.MeshStandardMaterial({color:cs.skin}));
+  head.position.y = 2.05; head.castShadow = true; g.add(head);
+  const hair = new THREE.Mesh(new THREE.SphereGeometry(0.3,20,20,0,Math.PI*2,0,Math.PI/2), new THREE.MeshStandardMaterial({color:cs.hair}));
+  hair.position.y = 2.1; g.add(hair);
+  const glMat = new THREE.MeshStandardMaterial({color:0x111111,metalness:0.8});
+  const gL = new THREE.Mesh(new THREE.TorusGeometry(0.08,0.015,8,16), glMat);
+  gL.position.set(-0.1,2.08,0.26); g.add(gL);
+  const gR = new THREE.Mesh(new THREE.TorusGeometry(0.08,0.015,8,16), glMat);
+  gR.position.set(0.1,2.08,0.26); g.add(gR);
+  const armMat = new THREE.MeshStandardMaterial({color:cs.shirt});
+  const armL = new THREE.Mesh(new THREE.BoxGeometry(0.18,0.8,0.18), armMat);
+  armL.position.set(-0.45,1.3,0); armL.castShadow = true; g.add(armL);
+  const armR = new THREE.Mesh(new THREE.BoxGeometry(0.18,0.8,0.18), armMat);
+  armR.position.set(0.45,1.3,0); armR.castShadow = true; g.add(armR);
+  const handMat = new THREE.MeshStandardMaterial({color:cs.skin});
+  const hL = new THREE.Mesh(new THREE.SphereGeometry(0.1,12,12), handMat);
+  hL.position.set(-0.45,0.85,0); g.add(hL);
+  const hR = new THREE.Mesh(new THREE.SphereGeometry(0.1,12,12), handMat);
+  hR.position.set(0.45,0.85,0); g.add(hR);
+  // Учебник географии
+  const textbook = new THREE.Mesh(new THREE.BoxGeometry(0.25,0.35,0.05), new THREE.MeshStandardMaterial({color:0x0066cc}));
+  textbook.position.set(0.45,0.85,0.15); g.add(textbook);
+  const legMat = new THREE.MeshStandardMaterial({color:cs.pants});
+  const legL = new THREE.Mesh(new THREE.BoxGeometry(0.22,0.8,0.22), legMat);
+  legL.position.set(-0.18,0.4,0); legL.castShadow = true; g.add(legL);
+  const legR = new THREE.Mesh(new THREE.BoxGeometry(0.22,0.8,0.22), legMat);
+  legR.position.set(0.18,0.4,0); legR.castShadow = true; g.add(legR);
+  const shoeMat = new THREE.MeshStandardMaterial({color:0x1a1a1a});
+  const sL = new THREE.Mesh(new THREE.BoxGeometry(0.24,0.1,0.35), shoeMat);
+  sL.position.set(-0.18,0.05,0.05); g.add(sL);
+  const sR = new THREE.Mesh(new THREE.BoxGeometry(0.24,0.1,0.35), shoeMat);
+  sR.position.set(0.18,0.05,0.05); g.add(sR);
+  g.position.set(sx, 0, sz);
+  return {group:g, armL, armR, legL, legR, head, speed:(1.2+Math.random()*0.8)*sm, walkPhase:Math.random()*Math.PI*2, hitTime:0, targetTimer:Math.random()*2, currentTarget:null, stuckTimer:0, lastPos:new THREE.Vector3(sx,0,sz), dodgeCooldown:0, isDodging:false, dodgeTime:0, dodgeDuration:0.6, dodgeDir:new THREE.Vector3(), dodgeOffset:new THREE.Vector3(), alertTime:0, startBasePos:new THREE.Vector3(sx,0,sz), attackCooldown:0, isAttacking:false, attackTime:0};
 }
 
-function pickNewTarget(teacher) {
-  let attempts = 0;
-  while (attempts < 20) {
-    const x = WALK_BOUNDS.minX + Math.random() * (WALK_BOUNDS.maxX - WALK_BOUNDS.minX);
-    const z = WALK_BOUNDS.minZ + Math.random() * (WALK_BOUNDS.maxZ - WALK_BOUNDS.minZ);
-    
+function pickNewTarget(t) {
+  for (let a = 0; a < 20; a++) {
+    const x = WALK_BOUNDS.minX + Math.random()*(WALK_BOUNDS.maxX-WALK_BOUNDS.minX);
+    const z = WALK_BOUNDS.minZ + Math.random()*(WALK_BOUNDS.maxZ-WALK_BOUNDS.minZ);
     let blocked = false;
     for (const d of desks) {
-      const dx = x - d.x;
-      const dz = z - d.z;
-      if (dx * dx + dz * dz < (d.radius + 0.5) * (d.radius + 0.5)) {
-        blocked = true;
-        break;
-      }
+      const dx = x-d.x, dz = z-d.z;
+      if (dx*dx+dz*dz < (d.radius+0.5)*(d.radius+0.5)) { blocked = true; break; }
     }
-    if (!blocked) {
-      teacher.currentTarget = new THREE.Vector3(x, 0, z);
-      return;
-    }
-    attempts++;
+    if (!blocked) { t.currentTarget = new THREE.Vector3(x,0,z); return; }
   }
-  teacher.currentTarget = new THREE.Vector3(0, 0, 0);
+  t.currentTarget = new THREE.Vector3(0,0,0);
 }
 
-function spawnTeachersForLevel(level) {
+function spawnTeachers(level) {
   teachers.forEach(t => scene.remove(t.group));
   teachers.length = 0;
-  
-  const config = levelConfig[level];
-  const numTeachers = config.teachers;
-  
-  for (let i = 0; i < numTeachers; i++) {
-    const angle = (i / numTeachers) * Math.PI * 2;
-    const radius = 6 + Math.random() * 4;
-    const startX = Math.cos(angle) * radius;
-    const startZ = Math.sin(angle) * radius - 3;
-    
-    const clampedX = Math.max(WALK_BOUNDS.minX + 1, Math.min(WALK_BOUNDS.maxX - 1, startX));
-    const clampedZ = Math.max(WALK_BOUNDS.minZ + 1, Math.min(WALK_BOUNDS.maxZ - 1, startZ));
-    
-    const t = makeTeacher(teacherColors[i % teacherColors.length], clampedX, clampedZ, config.speed);
-    teachers.push(t);
-    scene.add(t.group);
-    pickNewTarget(t);
+  const cfg = levelConfig[level];
+  for (let i = 0; i < cfg.teachers; i++) {
+    const ang = (i/cfg.teachers)*Math.PI*2;
+    const rad = 6+Math.random()*4;
+    const sx = Math.max(WALK_BOUNDS.minX+1, Math.min(WALK_BOUNDS.maxX-1, Math.cos(ang)*rad));
+    const sz = Math.max(WALK_BOUNDS.minZ+1, Math.min(WALK_BOUNDS.maxZ-1, Math.sin(ang)*rad-3));
+    const t = makeTeacher(tColors[i%tColors.length], sx, sz, cfg.speed);
+    teachers.push(t); scene.add(t.group); pickNewTarget(t);
   }
 }
 
-// ============ БАНАНЫ ============
+// БАНАНЫ
 const bananas = [];
-
 function createBanana() {
-  const group = new THREE.Group();
-  
-  const curve = new THREE.QuadraticBezierCurve3(
-    new THREE.Vector3(-0.3, 0, 0),
-    new THREE.Vector3(0, 0.25, 0),
-    new THREE.Vector3(0.3, 0, 0)
-  );
-  const tubeGeo = new THREE.TubeGeometry(curve, 16, 0.08, 8, false);
-  const bananaMat = new THREE.MeshStandardMaterial({ 
-    color: 0xffd700, roughness: 0.4, metalness: 0.1,
-    emissive: 0x332200, emissiveIntensity: 0.1
-  });
-  const bananaMesh = new THREE.Mesh(tubeGeo, bananaMat);
-  bananaMesh.castShadow = true;
-  group.add(bananaMesh);
-  
-  const tip1 = new THREE.Mesh(
-    new THREE.SphereGeometry(0.08, 8, 8),
-    new THREE.MeshStandardMaterial({ color: 0x8b6914 })
-  );
-  tip1.position.set(-0.3, 0, 0);
-  group.add(tip1);
-  
-  const tip2 = new THREE.Mesh(
-    new THREE.SphereGeometry(0.06, 8, 8),
-    new THREE.MeshStandardMaterial({ color: 0x4a3510 })
-  );
-  tip2.position.set(0.3, 0, 0);
-  group.add(tip2);
-  
-  return group;
+  const g = new THREE.Group();
+  const curve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(-0.3,0,0), new THREE.Vector3(0,0.25,0), new THREE.Vector3(0.3,0,0));
+  const tube = new THREE.Mesh(new THREE.TubeGeometry(curve,16,0.08,8,false), new THREE.MeshStandardMaterial({color:0xffd700,emissive:0x332200,emissiveIntensity:0.1}));
+  tube.castShadow = true; g.add(tube);
+  const t1 = new THREE.Mesh(new THREE.SphereGeometry(0.08,8,8), new THREE.MeshStandardMaterial({color:0x8b6914}));
+  t1.position.set(-0.3,0,0); g.add(t1);
+  const t2 = new THREE.Mesh(new THREE.SphereGeometry(0.06,8,8), new THREE.MeshStandardMaterial({color:0x4a3510}));
+  t2.position.set(0.3,0,0); g.add(t2);
+  return g;
 }
 
 let cameraKick = 0;
+let playerVelocityY = 0, isOnGround = true;
+const GRAVITY = -20, JUMP_FORCE = 8;
 
-// ============ ПРЫЖОК ============
-let playerVelocityY = 0;
-let isJumping = false;
-const GRAVITY = -20;
-const JUMP_FORCE = 8;
-
-// ============ МАТЕМАТИЧЕСКИЕ ПРИМЕРЫ ============
-let currentMathProblem = null;
-let mathProblemActive = false;
-
-function generateMathProblem() {
-  const operations = ['+', '-', '*'];
-  const op = operations[Math.floor(Math.random() * operations.length)];
-  let a, b, answer;
-  
-  if (op === '+') {
-    a = Math.floor(Math.random() * 50) + 1;
-    b = Math.floor(Math.random() * 50) + 1;
-    answer = a + b;
-  } else if (op === '-') {
-    a = Math.floor(Math.random() * 50) + 10;
-    b = Math.floor(Math.random() * a);
-    answer = a - b;
-  } else {
-    a = Math.floor(Math.random() * 12) + 1;
-    b = Math.floor(Math.random() * 12) + 1;
-    answer = a * b;
-  }
-  
-  return { text: `${a} ${op} ${b} = ?`, answer };
+// МАТЕМАТИКА
+let currentMathProblem = null, mathProblemActive = false;
+function genMath() {
+  const ops = ['+','-','*'];
+  const op = ops[Math.floor(Math.random()*ops.length)];
+  let a, b, ans;
+  if (op === '+') { a = Math.floor(Math.random()*50)+1; b = Math.floor(Math.random()*50)+1; ans = a+b; }
+  else if (op === '-') { a = Math.floor(Math.random()*50)+10; b = Math.floor(Math.random()*a); ans = a-b; }
+  else { a = Math.floor(Math.random()*12)+1; b = Math.floor(Math.random()*12)+1; ans = a*b; }
+  return {text:`${a} ${op} ${b} = ?`, answer:ans};
 }
-
-function showMathProblem() {
+function showMath() {
   if (mathProblemActive) return;
-  
-  currentMathProblem = generateMathProblem();
+  currentMathProblem = genMath();
   document.getElementById('problemText').textContent = currentMathProblem.text;
   document.getElementById('answerInput').value = '';
   document.getElementById('mathProblem').style.display = 'block';
-  document.getElementById('answerInput').focus();
+  setTimeout(() => document.getElementById('answerInput').focus(), 100);
   mathProblemActive = true;
   controls.unlock();
 }
-
 function submitAnswer() {
-  const userAnswer = parseInt(document.getElementById('answerInput').value);
-  
-  if (userAnswer === currentMathProblem.answer) {
-    bananasLeft += 2;
-    score += 50;
+  const ua = parseInt(document.getElementById('answerInput').value);
+  if (ua === currentMathProblem.answer) {
+    bananasLeft += 2; score += 50;
     playSound('correct');
     document.getElementById('mathProblem').style.display = 'none';
     mathProblemActive = false;
     updateUI();
-    controls.lock();
+    setTimeout(() => controls.lock(), 100);
   } else {
     playSound('wrong');
     document.getElementById('answerInput').style.borderColor = '#ff0000';
-    setTimeout(() => {
-      document.getElementById('answerInput').style.borderColor = '#ffd700';
-    }, 500);
+    setTimeout(() => document.getElementById('answerInput').style.borderColor = '#ffd700', 500);
   }
 }
-
 document.getElementById('submitAnswer').addEventListener('click', submitAnswer);
-document.getElementById('answerInput').addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') submitAnswer();
-});
+document.getElementById('answerInput').addEventListener('keypress', e => { if (e.key === 'Enter') submitAnswer(); });
 
-// ============ ПРОВЕРКА: СМОТРИТ ЛИ УЧИТЕЛЬ/КАМЕРА ============
-function isTeacherLookingAtPlayer(teacher) {
-  const config = levelConfig[currentLevel];
-  const teacherPos = teacher.group.position.clone();
-  teacherPos.y += 2.0;
-  
-  const playerPos = camera.position.clone();
-  const toPlayer = new THREE.Vector3().subVectors(playerPos, teacherPos);
-  const distance = toPlayer.length();
-  
-  if (distance > config.sightRange) return false;
-  
-  toPlayer.normalize();
-  
-  const lookDir = new THREE.Vector3(
-    Math.sin(teacher.group.rotation.y),
-    0,
-    Math.cos(teacher.group.rotation.y)
-  ).normalize();
-  
-  const dot = lookDir.dot(toPlayer);
-  const threshold = Math.cos(config.sightAngle);
-  
-  return dot > threshold;
+function isTeacherLooking(t) {
+  const cfg = levelConfig[currentLevel];
+  const tp = t.group.position.clone(); tp.y += 2.0;
+  const pp = camera.position.clone();
+  const toP = new THREE.Vector3().subVectors(pp, tp);
+  const dist = toP.length();
+  if (dist > cfg.sightRange) return false;
+  toP.normalize();
+  const look = new THREE.Vector3(Math.sin(t.group.rotation.y), 0, Math.cos(t.group.rotation.y)).normalize();
+  return look.dot(toP) > Math.cos(cfg.sightAngle);
 }
-
-function isCameraLookingAtPlayer(secCamera) {
-  if (secCamera.broken) return false;
-  
-  const camPos = secCamera.position.clone();
-  const playerPos = camera.position.clone();
-  
-  const toPlayer = new THREE.Vector3().subVectors(playerPos, camPos);
-  const distance = toPlayer.length();
-  
-  if (distance > secCamera.sightRange) return false;
-  
-  toPlayer.normalize();
-  
-  const totalRotY = secCamera.baseRotationY + secCamera.pivot.rotation.y;
-  const lookDir = new THREE.Vector3(
-    Math.sin(totalRotY),
-    -0.3,
-    Math.cos(totalRotY)
-  ).normalize();
-  
-  const dot = lookDir.dot(toPlayer);
-  const threshold = Math.cos(secCamera.sightAngle);
-  
-  return dot > threshold;
+function isCamLooking(c) {
+  if (c.broken) return false;
+  const cp = c.position.clone();
+  const pp = camera.position.clone();
+  const toP = new THREE.Vector3().subVectors(pp, cp);
+  if (toP.length() > c.sightRange) return false;
+  toP.normalize();
+  const totalRotY = c.baseRotationY + c.pivot.rotation.y;
+  const look = new THREE.Vector3(Math.sin(totalRotY), -0.3, Math.cos(totalRotY)).normalize();
+  return look.dot(toP) > Math.cos(c.sightAngle);
 }
 
 function throwBanana() {
-  if (bananasLeft <= 0) return;
-  if (lives <= 0) return;
-  
-  bananasLeft--;
-  updateUI();
-  
-  const banana = createBanana();
-  const dir = new THREE.Vector3();
-  camera.getWorldDirection(dir);
-  
-  banana.position.copy(camera.position);
-  banana.position.y -= 0.2;
-  
-  scene.add(banana);
-  
-  bananas.push({
-    mesh: banana,
-    velocity: dir.clone().multiplyScalar(20).add(new THREE.Vector3(0, 5, 0)),
-    angularVel: new THREE.Vector3(
-      (Math.random() - 0.5) * 12,
-      (Math.random() - 0.5) * 12,
-      (Math.random() - 0.5) * 12
-    ),
-    life: 4
-  });
-  
-  playSound('throw');
-  cameraKick = 0.3;
-  
-  for (const t of teachers) {
-    if (t.hitTime > 0) continue;
-    if (isTeacherLookingAtPlayer(t)) {
-      loseLife();
-      return;
-    }
-  }
-  
-  for (const c of securityCameras) {
-    if (c.broken) continue;
-    if (isCameraLookingAtPlayer(c)) {
-      loseLife();
-      return;
-    }
-  }
+  if (bananasLeft <= 0 || lives <= 0 || mathProblemActive) return;
+  bananasLeft--; updateUI();
+  const b = createBanana();
+  const dir = new THREE.Vector3(); camera.getWorldDirection(dir);
+  b.position.copy(camera.position); b.position.y -= 0.2;
+  scene.add(b);
+  bananas.push({mesh:b, velocity:dir.clone().multiplyScalar(20).add(new THREE.Vector3(0,5,0)), angularVel:new THREE.Vector3((Math.random()-0.5)*12,(Math.random()-0.5)*12,(Math.random()-0.5)*12), life:4});
+  playSound('throw'); cameraKick = 0.3;
+  for (const t of teachers) { if (t.hitTime > 0) continue; if (isTeacherLooking(t)) { loseLife(); return; } }
+  for (const c of securityCameras) { if (c.broken) continue; if (isCamLooking(c)) { loseLife(); return; } }
 }
 
 function loseLife() {
-  lives--;
-  playSound('caught');
-  showCaughtEffect();
-  showDamageFlash();
-  updateUI();
-  
-  if (lives <= 0) {
-    setTimeout(() => gameOver('Учителя или камеры тебя поймали! 💀'), 800);
-  }
+  lives--; playSound('caught');
+  showEffect('caughtEffect'); showDamageFlash(); updateUI();
+  if (lives <= 0) setTimeout(() => gameOver('Учителя или камеры тебя поймали! 💀'), 800);
 }
 
-function willHitTeacher(banana, teacher) {
-  const bananaPos = banana.mesh.position;
-  const bananaVel = banana.velocity;
-  const teacherPos = teacher.group.position;
-  teacherPos.y += 1.3;
-  
-  const toTeacher = new THREE.Vector3().subVectors(teacherPos, bananaPos);
-  const velDir = bananaVel.clone().normalize();
-  const along = toTeacher.dot(velDir);
-  
-  if (along < 0) return { willHit: false, distance: 999, timeToHit: 999 };
-  
-  const closestPoint = bananaPos.clone().add(velDir.clone().multiplyScalar(along));
-  const perpDistance = closestPoint.distanceTo(teacherPos);
-  const speed = bananaVel.length();
-  const timeToHit = along / speed;
-  
-  return {
-    willHit: perpDistance < 1.2 && timeToHit < 1.5 && timeToHit > 0.05,
-    distance: perpDistance,
-    timeToHit: timeToHit
-  };
+function tryDodge(t, b, cfg) {
+  if (t.dodgeCooldown > 0 || t.isDodging || t.hitTime > 0) return false;
+  if (Math.random() > cfg.dodgeChance) return false;
+  const tp = t.group.position;
+  const away = new THREE.Vector3().subVectors(tp, b.mesh.position); away.y = 0; away.normalize();
+  if (away.length() < 0.1) { const a = Math.random()*Math.PI*2; away.set(Math.cos(a),0,Math.sin(a)); }
+  const perp = new THREE.Vector3(-away.z, 0, away.x);
+  away.add(perp.multiplyScalar(0.4*(Math.random()>0.5?1:-1))); away.normalize();
+  t.isDodging = true; t.dodgeTime = 0; t.dodgeDuration = 0.5+Math.random()*0.2;
+  t.dodgeDir.copy(away); t.dodgeCooldown = cfg.dodgeReaction*2+0.5; t.alertTime = 0.5;
+  t.startBasePos.copy(t.group.position); t.startBasePos.y = 0;
+  playSound('dodge'); return true;
 }
 
-function tryDodge(teacher, banana, config) {
-  if (teacher.dodgeCooldown > 0) return false;
-  if (teacher.isDodging) return false;
-  if (teacher.hitTime > 0) return false;
-  
-  if (Math.random() > config.dodgeChance) return false;
-  
-  const bananaPos = banana.mesh.position;
-  const teacherPos = teacher.group.position;
-  
-  const awayDir = new THREE.Vector3().subVectors(teacherPos, bananaPos);
-  awayDir.y = 0;
-  awayDir.normalize();
-  
-  if (awayDir.length() < 0.1) {
-    const angle = Math.random() * Math.PI * 2;
-    awayDir.set(Math.cos(angle), 0, Math.sin(angle));
-  }
-  
-  const perp = new THREE.Vector3(-awayDir.z, 0, awayDir.x);
-  const sideSign = Math.random() > 0.5 ? 1 : -1;
-  awayDir.add(perp.multiplyScalar(0.4 * sideSign));
-  awayDir.normalize();
-  
-  teacher.isDodging = true;
-  teacher.dodgeTime = 0;
-  teacher.dodgeDuration = 0.5 + Math.random() * 0.2;
-  teacher.dodgeDir.copy(awayDir);
-  teacher.dodgeSpeed = 10 + config.dodgeDistance * 2;
-  teacher.dodgeCooldown = config.dodgeReaction * 2 + 0.5;
-  teacher.alertTime = 0.5;
-  
-  teacher.startBasePos.copy(teacher.group.position);
-  teacher.startBasePos.y = 0;
-  
-  playSound('dodge');
-  return true;
-}
-
-// ============ ЧАСТИЦЫ ============
 const particles = [];
-
-function spawnHitParticles(position) {
-  const colors = [0xffd700, 0xffa500, 0xffff00, 0xffffff];
+function spawnHitParticles(pos) {
+  const colors = [0xffd700,0xffa500,0xffff00,0xffffff];
+  for (let i = 0; i < 25; i++) {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(0.05+Math.random()*0.08,6,6), new THREE.MeshStandardMaterial({color:colors[Math.floor(Math.random()*colors.length)],emissive:0xffaa00,emissiveIntensity:0.5}));
+    m.position.copy(pos); scene.add(m);
+    particles.push({mesh:m, velocity:new THREE.Vector3((Math.random()-0.5)*10,Math.random()*8+2,(Math.random()-0.5)*10), life:1.5});
+  }
+}
+function spawnCamBreakParticles(pos) {
+  const colors = [0x333333,0x555555,0xff0000,0x2244aa];
   for (let i = 0; i < 30; i++) {
-    const geo = new THREE.SphereGeometry(0.05 + Math.random() * 0.08, 6, 6);
-    const mat = new THREE.MeshStandardMaterial({ 
-      color: colors[Math.floor(Math.random() * colors.length)],
-      emissive: 0xffaa00,
-      emissiveIntensity: 0.5
-    });
-    const p = new THREE.Mesh(geo, mat);
-    p.position.copy(position);
-    scene.add(p);
-    particles.push({
-      mesh: p,
-      velocity: new THREE.Vector3(
-        (Math.random() - 0.5) * 10,
-        Math.random() * 8 + 2,
-        (Math.random() - 0.5) * 10
-      ),
-      life: 1.5
-    });
-  }
-  
-  const canvas = document.createElement('canvas');
-  canvas.width = 256; canvas.height = 128;
-  const ctx = canvas.getContext('2d');
-  ctx.font = 'bold 80px Arial';
-  ctx.fillStyle = '#ff4444';
-  ctx.strokeStyle = '#fff';
-  ctx.lineWidth = 4;
-  ctx.textAlign = 'center';
-  ctx.strokeText('+100', 128, 90);
-  ctx.fillText('+100', 128, 90);
-  const tex = new THREE.CanvasTexture(canvas);
-  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
-  sprite.position.copy(position);
-  sprite.position.y += 1;
-  sprite.scale.set(1.5, 0.75, 1);
-  scene.add(sprite);
-  particles.push({ mesh: sprite, velocity: new THREE.Vector3(0, 2, 0), life: 1.5, isSprite: true });
-}
-
-function spawnDodgeParticles(position) {
-  for (let i = 0; i < 12; i++) {
-    const geo = new THREE.SphereGeometry(0.04 + Math.random() * 0.04, 6, 6);
-    const mat = new THREE.MeshStandardMaterial({ 
-      color: 0xcccccc,
-      transparent: true,
-      opacity: 0.6
-    });
-    const p = new THREE.Mesh(geo, mat);
-    p.position.copy(position);
-    p.position.y = 0.1;
-    scene.add(p);
-    particles.push({
-      mesh: p,
-      velocity: new THREE.Vector3(
-        (Math.random() - 0.5) * 3,
-        Math.random() * 1.5,
-        (Math.random() - 0.5) * 3
-      ),
-      life: 0.8
-    });
+    const s = 0.05+Math.random()*0.1;
+    const m = new THREE.Mesh(Math.random()>0.5?new THREE.BoxGeometry(s,s,s):new THREE.SphereGeometry(s,6,6), new THREE.MeshStandardMaterial({color:colors[Math.floor(Math.random()*colors.length)],metalness:0.7}));
+    m.position.copy(pos); scene.add(m);
+    particles.push({mesh:m, velocity:new THREE.Vector3((Math.random()-0.5)*8,-Math.random()*3-1,(Math.random()-0.5)*8), angularVel:new THREE.Vector3((Math.random()-0.5)*10,(Math.random()-0.5)*10,(Math.random()-0.5)*10), life:2.5, hasRot:true});
   }
 }
 
-function spawnCameraBreakParticles(position) {
-  const colors = [0x333333, 0x555555, 0x222222, 0x888888, 0xff0000, 0x2244aa];
-  for (let i = 0; i < 40; i++) {
-    const size = 0.05 + Math.random() * 0.12;
-    const geo = Math.random() > 0.5 
-      ? new THREE.BoxGeometry(size, size, size)
-      : new THREE.SphereGeometry(size, 6, 6);
-    const mat = new THREE.MeshStandardMaterial({ 
-      color: colors[Math.floor(Math.random() * colors.length)],
-      metalness: 0.7,
-      roughness: 0.3
-    });
-    const p = new THREE.Mesh(geo, mat);
-    p.position.copy(position);
-    scene.add(p);
-    particles.push({
-      mesh: p,
-      velocity: new THREE.Vector3(
-        (Math.random() - 0.5) * 8,
-        -Math.random() * 3 - 1,
-        (Math.random() - 0.5) * 8
-      ),
-      angularVel: new THREE.Vector3(
-        (Math.random() - 0.5) * 10,
-        (Math.random() - 0.5) * 10,
-        (Math.random() - 0.5) * 10
-      ),
-      life: 2.5,
-      hasRotation: true
-    });
-  }
-  
-  for (let i = 0; i < 15; i++) {
-    const geo = new THREE.SphereGeometry(0.03, 6, 6);
-    const mat = new THREE.MeshStandardMaterial({ 
-      color: 0xffff00,
-      emissive: 0xffff00,
-      emissiveIntensity: 2
-    });
-    const p = new THREE.Mesh(geo, mat);
-    p.position.copy(position);
-    scene.add(p);
-    particles.push({
-      mesh: p,
-      velocity: new THREE.Vector3(
-        (Math.random() - 0.5) * 6,
-        Math.random() * 4,
-        (Math.random() - 0.5) * 6
-      ),
-      life: 0.8
-    });
-  }
-}
-
-// ============ УПРАВЛЕНИЕ ============
 const controls = new PointerLockControls(camera, document.body);
-const move = { forward: false, backward: false, left: false, right: false, sprint: false };
+const move = {forward:false,backward:false,left:false,right:false,sprint:false};
 const velocity = new THREE.Vector3();
 
-document.addEventListener
+document.addEventListener('keydown', e => {
+  if (mathProblemActive) return;
+  if (e.code === 'KeyW') move.forward = true;
+  if (e.code === 'KeyS') move.backward = true;
+  if (e.code === 'KeyA') move.left = true;
+  if (e.code === 'KeyD') move.right = true;
+  if (e.code === 'ShiftLeft') move.sprint = true;
+  if (e.code === 'Space' && isOnGround && controls.isLocked) {
+    playerVelocityY = JUMP_FORCE; isOnGround = false;
+    playSound('jump');
+  }
+  if (e.code === 'KeyE' && controls.isLocked) handleInteraction();
+});
+document.addEventListener('keyup', e => {
+  if (e.code === 'KeyW') move.forward = false;
+  if (e.code === 'KeyS') move.backward = false;
+  if (e.code === 'KeyA') move.left = false;
+  if (e.code === 'KeyD') move.right = false;
+  if (e.code === 'ShiftLeft') move.sprint = false;
+});
+document.addEventListener('mousedown', e => {
+  if (e.button === 0 && controls.isLocked && !mathProblemActive) throwBanana();
+});
+
+function handleInteraction() {
+  const pp = camera.position;
+  // Дверь
+  const doorDist = pp.distanceTo(doorPosition);
+  if (doorDist < 3) {
+    doorOpen = !doorOpen;
+    playSound('door');
+    return;
+  }
+  // Доска
+  const boardDist = new THREE.Vector3(pp.x, pp.y, pp.z).distanceTo(boardPosition);
+  if (boardDist < 3 && bananasLeft === 0) {
+    showMath();
+    return;
+  }
+}
+
+document.getElementById('startBtn').addEventListener('click', () => {
+  document.getElementById('menu').style.display = 'none';
+  lives = MAX_LIVES; cameraLevelsLeft = CAMERA_GRACE;
+  startLevel(1);
+  controls.lock();
+});
+document.getElementById('nextLevelBtn').addEventListener('click', () => {
+  document.getElementById('levelComplete').style.display = 'none';
+  currentLevel++; startLevel(currentLevel); controls.lock();
+});
+document.getElementById('restartBtn').addEventListener('click', () => {
+  document.getElementById('gameOver').style.display = 'none';
+  currentLevel = 1; totalScore = 0; lives = MAX_LIVES; cameraLevelsLeft = CAMERA_GRACE;
+  document.getElementById('menu').style.display = 'flex';
+});
+document.getElementById('retryBtn').addEventListener('click', () => {
+  document.getElementById('gameOverScreen').style.display = 'none';
+  lives = MAX_LIVES; cameraLevelsLeft = CAMERA_GRACE; currentLevel = 1; totalScore = 0;
+  document.getElementById('menu').style.display = 'flex';
+});
+
+controls.addEventListener('lock', () => { document.getElementById('menu').style.display = 'none'; });
+controls.addEventListener('unlock', () => {
+  if (gameRunning && !mathProblemActive &&
+      document.getElementById('levelComplete').style.display === 'none' &&
+      document.getElementById('gameOver').style.display === 'none' &&
+      document.getElementById('gameOverScreen').style.display === 'none') {
+    document.getElementById('menu').style.display = 'flex';
+  }
+});
+
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSound(type) {
+  try {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    if (type === 'throw') { o.frequency.setValueAtTime(500,audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(200,audioCtx.currentTime+0.15); g.gain.setValueAtTime(0.15,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.15); o.start(); o.stop(audioCtx.currentTime+0.15); }
+    else if (type === 'hit') { o.type='square'; o.frequency.setValueAtTime(800,audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(100,audioCtx.currentTime+0.3); g.gain.setValueAtTime(0.2,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.3); o.start(); o.stop(audioCtx.currentTime+0.3); }
+    else if (type === 'dodge') { o.type='sawtooth'; o.frequency.setValueAtTime(300,audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(600,audioCtx.currentTime+0.15); g.gain.setValueAtTime(0.1,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.2); o.start(); o.stop(audioCtx.currentTime+0.2); }
+    else if (type === 'caught') { o.type='sawtooth'; o.frequency.setValueAtTime(400,audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(80,audioCtx.currentTime+0.5); g.gain.setValueAtTime(0.3,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.5); o.start(); o.stop(audioCtx.currentTime+0.5); }
+    else if (type === 'camBreak') { o.type='sawtooth'; o.frequency.setValueAtTime(1200,audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(100,audioCtx.currentTime+0.4); g.gain.setValueAtTime(0.25,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.4); o.start(); o.stop(audioCtx.currentTime+0.4); }
+    else if (type === 'levelUp') { o.frequency.setValueAtTime(400,audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(800,audioCtx.currentTime+0.5); g.gain.setValueAtTime(0.3,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.5); o.start(); o.stop(audioCtx.currentTime+0.5); }
+    else if (type === 'correct') { o.frequency.setValueAtTime(600,audioCtx.currentTime); o.frequency.setValueAtTime(800,audioCtx.currentTime+0.1); g.gain.setValueAtTime(0.2,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.3); o.start(); o.stop(audioCtx.currentTime+0.3); }
+    else if (type === 'wrong') { o.type='sawtooth'; o.frequency.setValueAtTime(200,audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(100,audioCtx.currentTime+0.3); g.gain.setValueAtTime(0.2,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.3); o.start(); o.stop(audioCtx.currentTime+0.3); }
+    else if (type === 'jump') { o.frequency.setValueAtTime(300,audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(500,audioCtx.currentTime+0.1); g.gain.setValueAtTime(0.1,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.1); o.start(); o.stop(audioCtx.currentTime+0.1); }
+    else if (type === 'door') { o.type='triangle'; o.frequency.setValueAtTime(150,audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(80,audioCtx.currentTime+0.4); g.gain.setValueAtTime(0.2,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.4); o.start(); o.stop(audioCtx.currentTime+0.4); }
+    else if (type === 'textbook') { o.type='square'; o.frequency.setValueAtTime(150,audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(50,audioCtx.currentTime+0.3); g.gain.setValueAtTime(0.3,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.3); o.start(); o.stop(audioCtx.currentTime+0.3); }
+  } catch(e) {}
+}
+
+let score = 0, bananasLeft = 20, combo = 0, comboTimer = 0, gameRunning = true;
+
+function updateUI() {
+  const cfg = levelConfig[currentLevel];
+  document.getElementById('level').textContent = `Уровень ${currentLevel} / ${MAX_LEVEL}`;
+  document.getElementById('score').textContent = `Очки: ${totalScore + score}`;
+  document.getElementById('progress').textContent = `Попадания: ${hitsThisLevel} / ${cfg.hitsNeeded}`;
+  document.getElementById('bananas').textContent = `🍌 Бананы: ${bananasLeft}`;
+  let h = ''; for (let i = 0; i < MAX_LIVES; i++) h += i < lives ? '❤️' : '🖤';
+  document.getElementById('lives').textContent = h;
+  const ac = activeCamsCount();
+  document.getElementById('cameras').textContent = `📹 Камеры: ${ac}/4 | ⏳ ${cameraLevelsLeft} ур.`;
+  const w = document.getElementById('cameraWarning');
+  if (ac > 0 && cameraLevelsLeft <= 2) { w.style.display = 'block'; w.textContent = `⚠️ Сломай камеры! Осталось ${cameraLevelsLeft} ур.!`; }
+  else w.style.display = 'none';
+  const ce = document.getElementById('combo');
+  if (combo > 1) { ce.textContent = `🔥 КОМБО x${combo}!`; ce.style.opacity = '1'; }
+  else ce.style.opacity = '0';
+  document.getElementById('noBananaHint').style.display = (bananasLeft === 0 && !mathProblemActive) ? 'block' : 'none';
+}
+
+function showEffect(id) {
+  const el = document.getElementById(id);
+  const texts = {
+    hitEffect:['БАМ!','ПОПАЛ!','УУУХ!'],
+    dodgeEffect:['УКЛОНИЛСЯ!','МИМО!','ЛОВКИЙ!'],
+    caughtEffect:['ПОЙМАЛИ!','ЗАСТУКАЛИ!','ПАЛЕВО!'],
+    cameraBreakEffect:['💥 КАМЕРА СЛОМАНА!','🔨 РАЗБИЛ!'],
+    textbookHit:['📖 БАЦ!','ГЕОГРАФИЯ!','ПОЛУЧИ!']
+  };
+  const arr = texts[id] || ['!'];
+  el.textContent = arr[Math.floor(Math.random()*arr.length)];
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 500);
+}
+function showDamageFlash() {
+  const el = document.getElementById('damageFlash');
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 400);
+}
+
+function startLevel(level) {
+  currentLevel = level; hitsThisLevel = 0; dodgesThisLevel = 0;
+  score = 0; bananasLeft = 20; combo = 0; comboTimer = 0;
+  gameRunning = true; doorOpen = false; doorAngle = 0; doorPivot.rotation.y = 0;
+  spawnTeachers(level);
+  if (securityCameras.length === 0) spawnCameras();
+  camera.position.set(0, 1.6, 10);
+  playerVelocityY = 0; isOnGround = true;
+  updateUI();
+}
+
+function completeLevel() {
+  gameRunning = false; controls.unlock();
+  totalScore += score; playSound('levelUp');
+  const ac = activeCamsCount();
+  if (ac > 0) {
+    cameraLevelsLeft--;
+    if (cameraLevelsLeft <= 0) {
+      setTimeout(() => gameOver('Камеры видеонаблюдения записали тебя! 📹💀'), 500);
+      return;
+    }
+  } else cameraLevelsLeft = CAMERA_GRACE;
+  if (currentLevel >= MAX_LEVEL) { showVictory(); return; }
+  const cs = getActiveCamStatus();
+  document.getElementById('levelStats').innerHTML = `
+    Уровень ${currentLevel} пройден!<br>
+    Очки за уровень: ${score}<br>
+    Учителей уклонилось: ${dodgesThisLevel}<br>
+    Осталось жизней: ${'❤️'.repeat(lives)}<br>
+    ${cs}<br>
+    Всего очков: ${totalScore}
+  `;
+  document.getElementById('levelComplete').style.display = 'flex';
+}
+function getActiveCamStatus() {
+  const ac = activeCamsCount();
+  if (ac > 0) return `<span style="color:#ff4444;">📹 Камеры работают! Осталось: ${cameraLevelsLeft} ур.</span>`;
+  return `<span style="color:#00ff88;">✅ Все камеры сломаны!</span>`;
+}
+function showVictory() {
+  document.getElementById('gameOverStats').innerHTML = `🎊 Ты прошёл все 20 уровней! 🎊<br><br>Счёт: <b style="color:#ffd700;">${totalScore}</b><br>Жизней: ${'❤️'.repeat(lives)}<br><br>Ты — повелитель бананов! 🍌👑`;
+  document.getElementById('gameOver').style.display = 'flex';
+}
+function gameOver(reason) {
+  gameRunning = false; controls.unlock(); playSound('caught');
+  document.getElementById('caughtStats').innerHTML = `${reason||'Тебя поймали!'} 💀<br><br>Уровень: <b>${currentLevel}/${MAX_LEVEL}</b><br>Очки: <b style="color:#ffd700;">${totalScore+score}</b>`;
+  document.getElementById('gameOverScreen').style.display = 'flex';
+}
+
+function blocked(x, z, r = 0.5) {
+  for (const d of desks) {
+    const dx = x-d.x, dz = z-d.z;
+    if (Math.sqrt(dx*dx+dz*dz) < d.radius + r) return true;
+  }
+  return false;
+}
+
+const clock = new THREE.Clock();
+let lastBananaRegen = 0;
+let textbookHitCooldown = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+  const delta = Math.min(clock.getDelta(), 0.1);
+  const time = clock.getElapsedTime();
+  
+  if (controls.isLocked && gameRunning) {
+    // Движение
+    const spd = move.sprint ? 9 : 5;
+    velocity.x -= velocity.x * 10 * delta;
+    velocity.z -= velocity.z * 10 * delta;
+    const dir = new THREE.Vector3();
+    dir.z = Number(move.forward) - Number(move.backward);
+    dir.x = Number(move.right) - Number(move.left);
+    dir.normalize();
+    if (move.forward || move.backward) velocity.z -= dir.z * spd * delta * 20;
+    if (move.left || move.right) velocity.x -= dir.x * spd * delta * 20;
+    controls.moveRight(-velocity.x * delta);
+    controls.moveForward(-velocity.z * delta);
+    
+    // Прыжок + гравитация
+    if (!isOnGround) {
+      playerVelocityY += GRAVITY * delta;
+      camera.position.y += playerVelocityY * delta;
+      if (camera.position.y <= 1.6) {
+        camera.position.y = 1.6;
+        playerVelocityY = 0;
+        isOnGround = true;
+      }
+    }
+    
+    // Ограничения
+    const isOutside = doorOpen && camera.position.z > 14.5;
+    if (isOutside) {
+      camera.position.x = Math.max(-30, Math.min(40, camera.position.x));
+      camera.position.z = Math.max(14.5, Math.min(60, camera.position.z));
+    } else {
+      camera.position.x = Math.max(-18, Math.min(18, camera.position.x));
+      camera.position.z = Math.max(-13, Math.min(14, camera.position.z));
+      if (!isOnGround) camera.position.y = Math.min(camera.position.y, 1.6);
+      else camera.position.y = 1.6;
+    }
+    
+    const isMoving = move.forward || move.backward || move.left || move.right;
+    if (isMoving && isOnGround) {
+      camera.position.y += Math.sin(time * (move.sprint ? 14 : 10)) * 0.04;
+    }
+    
+    if (cameraKick > 0) {
+      const kd = new THREE.Vector3(); camera.getWorldDirection(kd);
+      camera.position.addScaledVector(kd, -cameraKick * 0.1);
+      cameraKick -= delta * 2;
+      if (cameraKick < 0) cameraKick = 0;
+    }
+    
+    // Дверь
+    const targetDoorAngle = doorOpen ? -Math.PI/2 : 0;
+    doorAngle += (targetDoorAngle - doorAngle) * Math.min(1, delta * 5);
+    doorPivot.rotation.y = doorAngle;
+    
+    // Подсказка взаимодействия
+    const pp = camera.position;
+    const doorDist = pp.distanceTo(doorPosition);
+    const boardDist = new THREE.Vector3(pp.x,pp.y,pp.z).distanceTo(boardPosition);
+    const hint = document.getElementById('interactionHint');
+    if (doorDist < 3) { hint.style.display = 'block'; hint.innerHTML = 'Нажми <b>E</b> — ' + (doorOpen ? 'закрыть дверь' : 'выйти на улицу'); }
+    else if (boardDist < 3 && bananasLeft === 0) { hint.style.display = 'block'; hint.innerHTML = 'Нажми <b>E</b> — решить пример'; }
+    else hint.style.display = 'none';
+    
+    const cfg = levelConfig[currentLevel];
+    
+    // Камеры
+    securityCameras.forEach(c => {
+      if (c.broken) return;
+      c.scanPhase += delta * c.scanSpeed;
+      c.pivot.rotation.y = Math.sin(c.scanPhase) * 0.8;
+      const blink = Math.sin(time * 4 + c.scanPhase) > 0;
+      c.ledMat.emissiveIntensity = blink ? 2.0 : 0.3;
+      c.ledLight.intensity = blink ? 0.8 : 0.1;
+    });
+    
+    // Бананы
+    for (let i = bananas.length - 1; i >= 0; i--) {
+      const b = bananas[i];
+      b.velocity.y -= 18 * delta;
+      b.mesh.position.add(b.velocity.clone().multiplyScalar(delta));
+      b.mesh.rotation.x += b.angularVel.x * delta;
+      b.mesh.rotation.y += b.angularVel.y * delta;
+      b.mesh.rotation.z += b.angularVel.z * delta;
+      b.life -= delta;
+      
+      // Попадание в камеру
+      let camHit = false;
+      for (const c of securityCameras) {
+        if (c.broken) continue;
+        if (b.mesh.position.distanceTo(c.position) < 0.8) {
+          camHit = true; c.broken = true;
+          spawnCamBreakParticles(c.position.clone());
+          showEffect('cameraBreakEffect');
+          playSound('camBreak');
+          score += 250;
+          setTimeout(() => scene.remove(c.group), 100);
+          updateUI(); break;
+        }
+      }
+      if (camHit) { scene.remove(b.mesh); bananas.splice(i, 1); continue; }
+      
+      // Уклонение
+      for (const t of teachers) {
+        if (t.isDodging || t.hitTime > 0) continue;
+        const bp = b.mesh.position, bv = b.velocity, tp = t.group.position.clone(); tp.y += 1.3;
+        const toT = new THREE.Vector3().subVectors(tp, bp);
+        const vd = bv.clone().normalize();
+        const along = toT.dot(vd);
+        if (along < 0) continue;
+        const cp = bp.clone().add(vd.clone().multiplyScalar(along));
+        const pd = cp.distanceTo(tp);
+        const th = along / bv.length();
+        if (pd < 1.2 && th < cfg.dodgeReaction && th > 0.05) {
+          if (tryDodge(t, b, cfg)) { dodgesThisLevel++; showEffect('dodgeEffect'); }
+        }
+      }
+      
+      // Попадание в учителя
+      let hit = false;
+      for (const t of teachers) {
+        const hr = t.isDodging ? 0.5 : 1.0;
+        const tp = t.group.position;
+        const d = b.mesh.position.distanceTo(new THREE.Vector3(tp.x, tp.y+1.3, tp.z));
+        if (d < hr) {
+          hit = true; combo++; comboTimer = 2;
+          score += 100 * combo; hitsThisLevel++;
+          t.hitTime = 0.5; t.isDodging = false; t.dodgeOffset.set(0,0,0);
+          spawnHitParticles(b.mesh.position.clone());
+          showEffect('hitEffect'); playSound('hit'); updateUI();
+          if (hitsThisLevel >= cfg.hitsNeeded) setTimeout(() => completeLevel(), 500);
+          break;
+        }
+      }
+      if (hit || b.life <= 0 || b.mesh.position.y < -2) { scene.remove(b.mesh); bananas.splice(i, 1); }
+    }
+    
+    // Частицы
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      if (!p.isSprite) p.velocity.y -= 12 * delta;
+      p.mesh.position.add(p.velocity.clone().multiplyScalar(delta));
+      if (p.hasRot && p.angularVel) {
+        p.mesh.rotation.x += p.angularVel.x * delta;
+        p.mesh.rotation.y += p.angularVel.y * delta;
+        p.mesh.rotation.z += p.angularVel.z * delta;
+      }
+      p.life -= delta;
+      if (p.mesh.material) { p.mesh.material.transparent = true; p.mesh.material.opacity = Math.max(0, p.life); }
+      if (p.life <= 0) { scene.remove(p.mesh); particles.splice(i, 1); }
+    }
+    
+    // Учителя
+    if (textbookHitCooldown > 0) textbookHitCooldown -= delta;
+    teachers.forEach(t => {
+      if (t.dodgeCooldown > 0) t.dodgeCooldown -= delta;
+      if (t.alertTime > 0) t.alertTime -= delta;
+      if (t.attackCooldown > 0) t.attackCooldown -= delta;
+      
+      // Уклонение
+      if (t.isDodging) {
+        t.dodgeTime += delta;
+        const pr = t.dodgeTime / t.dodgeDuration;
+        if (pr < 1) {
+          const ma = Math.sin(pr * Math.PI) * cfg.dodgeDistance;
+          t.dodgeOffset.copy(t.dodgeDir).multiplyScalar(ma);
+          t.group.position.x = t.startBasePos.x + t.dodgeOffset.x;
+          t.group.position.z = t.startBasePos.z + t.dodgeOffset.z;
+          t.group.position.y = Math.sin(pr * Math.PI) * 0.4;
+          t.group.rotation.z = Math.sin(pr * Math.PI) * 0.6 * (t.dodgeDir.x > 0 ? -1 : 1);
+          const ar = Math.sin(pr * Math.PI);
+          t.armL.rotation.x = -Math.PI * 0.7 * ar;
+          t.armR.rotation.x = -Math.PI * 0.7 * ar;
+          t.legL.rotation.x = Math.sin(t.dodgeTime * 15) * 0.8;
+          t.legR.rotation.x = -Math.sin(t.dodgeTime * 15) * 0.8;
+        } else {
+          t.isDodging = false; t.dodgeOffset.set(0,0,0);
+          t.group.position.x = t.startBasePos.x;
+          t.group.position.z = t.startBasePos.z;
+          t.group.position.y = 0; t.group.rotation.z = 0;
+          t.startBasePos.copy(t.group.position);
+        }
+      }
+      
+      t.targetTimer -= delta;
+      const moved = t.group.position.distanceTo(t.lastPos);
+      if (moved < 0.01 && !t.isDodging) { t.stuckTimer += delta; if (t.stuckTimer > 1.0) { pickNewTarget(t); t.stuckTimer = 0; } }
+      else if (!t.isDodging) t.stuckTimer = 0;
+      t.lastPos.copy(t.group.position);
+      
+      if (t.targetTimer <= 0 || (t.currentTarget && t.group.position.distanceTo(t.currentTarget) < 1.0)) {
+        pickNewTarget(t); t.targetTimer = 3 + Math.random() * 4;
+      }
+      
+      // Движение к цели
+      if (t.currentTarget && t.hitTime <= 0 && !t.isDodging) {
+        const dx = t.currentTarget.x - t.group.position.x;
+        const dz = t.currentTarget.z - t.group.position.z;
+        const d = Math.sqrt(dx*dx+dz*dz);
+        if (d > 0.1) {
+          const mx = (dx/d) * t.speed * delta;
+          const mz = (dz/d) * t.speed * delta;
+          const nx = t.group.position.x + mx, nz = t.group.position.z + mz;
+          if (!blocked(nx, nz, 0.5)) { t.group.position.x = nx; t.group.position.z = nz; }
+          else {
+            const px = -dz/d, pz = dx/d;
+            const ax = t.group.position.x + px*t.speed*delta;
+            const az = t.group.position.z + pz*t.speed*delta;
+            if (!blocked(ax, az, 0.5)) { t.group.position.x = ax; t.group.position.z = az; }
+            else pickNewTarget(t);
+          }
+          const tr = Math.atan2(dx, dz);
+          let rd = tr - t.group.rotation.y;
+          while (rd > Math.PI) rd -= Math.PI*2;
+          while (rd < -Math.PI) rd += Math.PI*2;
+          t.group.rotation.y += rd * Math.min(1, delta * 5);
+          t.startBasePos.copy(t.group.position); t.startBasePos.y = 0;
+        }
+      }
+      
+      t.group.position.x = Math.max(WALK_BOUNDS.minX, Math.min(WALK_BOUNDS.maxX, t.group.position.x));
+      t.group.position.z = Math.max(WALK_BOUNDS.minZ, Math.min(WALK_BOUNDS.maxZ, t.group.position.z));
+      
+      // Анимация ходьбы
+      if (!t.isDodging && t.hitTime <= 0) {
+        const isW = t.currentTarget && t.group.position.distanceTo(t.currentTarget) > 0.5;
+        if (isW) {
+          t.walkPhase += delta * 6;
+          t.armL.rotation.x = Math.sin(t.walkPhase) * 0.5;
+          t.armR.rotation.x = -Math.sin(t.walkPhase) * 0.5;
+          t.legL.rotation.x = -Math.sin(t.walkPhase) * 0.6;
+          t.legR.rotation.x = Math.sin(t.walkPhase) * 0.6;
+          t.group.position.y = Math.abs(Math.sin(t.walkPhase)) * 0.05;
+        } else {
+          t.armL.rotation.x *= 0.9; t.armR.rotation.x *= 0.9;
+          t.legL.rotation.x *= 0.9; t.legR.rotation.x *= 0.9;
+          t.group.position.y *= 0.9;
+        }
+      }
+      
+      // БЛИЗКИЙ КОНТАКТ — удар учебником географии
+      const toPlayer = new THREE.Vector3().subVectors(camera.position, t.group.position);
+      toPlayer.y = 0;
+      const distToPlayer = toPlayer.length();
+      if (distToPlayer < 1.8 && t.attackCooldown <= 0 && t.hitTime <= 0 && !t.isDodging && textbookHitCooldown <= 0) {
+        t.isAttacking = true; t.attackTime = 0; t.attackCooldown = 3;
+        textbookHitCooldown = 1.5;
+        loseLife();
+        showEffect('textbookHit');
+        playSound('textbook');
+        // Отбрасывание игрока
+        const pushDir = toPlayer.normalize();
+        controls.moveRight(-pushDir.x * 2);
+        controls.moveForward(-pushDir.z * 2);
+      }
+      
+      // Анимация атаки учебником
+      if (t.isAttacking) {
+        t.attackTime += delta;
+        const pr = t.attackTime / 0.5;
+        if (pr < 1) {
+          t.armR.rotation.x = -Math.PI * 0.9 * Math.sin(pr * Math.PI);
+          t.armR.rotation.z = 0.5 * Math.sin(pr * Math.PI);
+        } else {
+          t.isAttacking = false;
+          t.armR.rotation.x = 0; t.armR.rotation.z = 0;
+        }
+      }
+      
+      // Тряска при попадании (КОРОТКАЯ)
+      if (t.hitTime > 0) {
+        t.hitTime -= delta;
+        const intensity = t.hitTime / 0.5;
+        t.group.position.y = Math.abs(Math.sin(t.hitTime * Math.PI * 4) * 0.3 * intensity);
+        t.group.rotation.z = Math.sin(t.hitTime * 30) * 0.25 * intensity;
+        t.armL.rotation.x = -Math.PI * 0.7;
+        t.armR.rotation.x = -Math.PI * 0.7;
+      } else if (!t.isDodging && !t.isAttacking) {
+        t.group.rotation.z *= 0.9;
+      }
+    });
+    
+    if (comboTimer > 0) { comboTimer -= delta; if (comboTimer <= 0) { combo = 0; updateUI(); } }
+    
+    lastBananaRegen += delta;
+    if (lastBananaRegen > cfg.bananaRegen && bananasLeft < 20) { bananasLeft++; lastBananaRegen = 0; updateUI(); }
+  }
+  
+  renderer.render(scene, camera);
+}
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+animate();
+</script>
+</body>
+</html>
