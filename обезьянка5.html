@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>🐒 Обезьяна vs Учителя 🍌 - Камеры</title>
+<title>🐒 Обезьяна vs Учителя 🍌 - Полная версия</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { overflow: hidden; background: #000; font-family: 'Arial', sans-serif; }
@@ -59,6 +59,22 @@
   #combo {
     font-size: 24px; color: #ff4444; margin-top: 8px;
     opacity: 0; transition: opacity 0.3s;
+  }
+  #interactionHint {
+    position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+    font-size: 28px; color: #fff;
+    background: rgba(0,0,0,0.8);
+    padding: 15px 30px;
+    border-radius: 12px;
+    border: 2px solid #ffd700;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    pointer-events: none; z-index: 15;
+    display: none;
+    animation: hintPulse 1s infinite;
+  }
+  @keyframes hintPulse {
+    0%, 100% { transform: translateX(-50%) scale(1); }
+    50% { transform: translateX(-50%) scale(1.05); }
   }
   #crosshair {
     position: fixed; top: 50%; left: 50%;
@@ -147,6 +163,55 @@
     transition: opacity 0.3s;
   }
   #damageFlash.show { opacity: 1; }
+  #mathProblem {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.95);
+    padding: 40px 60px;
+    border-radius: 20px;
+    border: 3px solid #ffd700;
+    text-align: center;
+    z-index: 200;
+    display: none;
+    box-shadow: 0 0 50px rgba(255,215,0,0.5);
+  }
+  #mathProblem h3 {
+    font-size: 36px;
+    color: #ffd700;
+    margin-bottom: 20px;
+  }
+  #mathProblem .problem {
+    font-size: 48px;
+    color: #fff;
+    margin: 30px 0;
+    font-weight: bold;
+  }
+  #mathProblem input {
+    font-size: 32px;
+    padding: 15px 30px;
+    width: 200px;
+    text-align: center;
+    border: 2px solid #ffd700;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    outline: none;
+  }
+  #mathProblem button {
+    margin-top: 20px;
+    padding: 12px 40px;
+    font-size: 24px;
+    background: linear-gradient(135deg, #00ff88, #00aaff);
+    border: none;
+    border-radius: 10px;
+    color: #000;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  #mathProblem .hint {
+    margin-top: 15px;
+    font-size: 16px;
+    color: #aaa;
+  }
   #levelComplete {
     position: fixed; inset: 0; background: rgba(0,0,0,0.9);
     display: none; flex-direction: column; align-items: center; justify-content: center;
@@ -224,12 +289,15 @@
     <p>🖱️ <b>Мышь</b> — прицеливание</p>
     <p>🔫 <b>ЛКМ</b> — бросить банан</p>
     <p>⌨️ <b>WASD</b> — движение</p>
+    <p>🦘 <b>Пробел</b> — прыжок</p>
+    <p>🚪 <b>E</b> — открыть дверь</p>
     <p>🏃 <b>Shift</b> — бежать</p>
     <p>⎋ <b>ESC</b> — пауза</p>
   </div>
   <p style="color:#ff4444; font-size:16px; margin-top:10px;">⚠️ Осторожно! Если учитель <b>смотрит на тебя</b> когда ты бросаешь — теряешь ❤️ жизнь!</p>
   <p style="color:#ff6600; font-size:16px;">📹 В классе 4 камеры! Сломай их, иначе через <b>3 уровня</b> проиграешь!</p>
-  <p style="color:#00aaff; font-size:16px;">⚡ Учителя учатся уворачиваться!</p>
+  <p style="color:#00ff88; font-size:16px;">📚 Когда бананы закончатся — иди к доске и решай примеры!</p>
+  <p style="color:#00aaff; font-size:16px;">⚡ Учителя учатся уворачиваться и бьют учебниками!</p>
   <button id="startBtn">🎮 НАЧАТЬ ИГРУ</button>
 </div>
 
@@ -239,9 +307,20 @@
   <div id="progress">Попадания: 0 / 5</div>
   <div id="bananas">🍌 Бананы: 20</div>
   <div id="lives">❤️❤️❤️❤️❤️</div>
-  <div id="cameras">📹 Камеры: 4/4</div>
+  <div id="cameras">📹 Камеры: 4/4 | ⏳ До проигрыша: 3 ур.</div>
   <div id="cameraWarning">⚠️ ВНИМАНИЕ! Сломай камеры!</div>
   <div id="combo"></div>
+</div>
+
+<div id="interactionHint">Нажми <b>E</b> чтобы открыть дверь</div>
+
+<div id="mathProblem">
+  <h3>📚 РЕШИ ПРИМЕР!</h3>
+  <div class="problem" id="problemText">2 + 2 = ?</div>
+  <input type="number" id="answerInput" placeholder="?" autocomplete="off">
+  <br>
+  <button id="submitAnswer">ОТВЕТИТЬ</button>
+  <div class="hint">За правильный ответ: +2 🍌</div>
 </div>
 
 <div id="crosshair"><div id="crosshairDot"></div></div>
@@ -308,13 +387,13 @@ const levelConfig = {
 
 const MAX_LEVEL = 20;
 const MAX_LIVES = 5;
-const CAMERA_GRACE_LEVELS = 3; // Сколько уровней можно играть с камерами
+const CAMERA_GRACE_LEVELS = 3;
 let currentLevel = 1;
 let hitsThisLevel = 0;
 let totalScore = 0;
 let dodgesThisLevel = 0;
 let lives = MAX_LIVES;
-let cameraLevelsLeft = CAMERA_GRACE_LEVELS; // Сколько уровней осталось до проигрыша из-за камер
+let cameraLevelsLeft = CAMERA_GRACE_LEVELS;
 
 // ============ СЦЕНА ============
 const scene = new THREE.Scene();
@@ -492,13 +571,47 @@ const board = new THREE.Mesh(
 board.position.set(0, 3, -14.6);
 scene.add(board);
 
-// ============ ПАРТЫ ============
+// ============ ДВЕРЬ ============
+const doorGroup = new THREE.Group();
+const doorFrame = new THREE.Mesh(
+  new THREE.BoxGeometry(2.2, 3.2, 0.3),
+  new THREE.MeshStandardMaterial({ color: 0x3d2817, roughness: 0.7 })
+);
+doorFrame.position.set(15, 1.6, 14.85);
+doorFrame.castShadow = true;
+doorFrame.receiveShadow = true;
+scene.add(doorFrame);
+
+const door = new THREE.Mesh(
+  new THREE.BoxGeometry(2, 3, 0.1),
+  new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.6 })
+);
+door.position.set(15, 1.5, 14.9);
+door.castShadow = true;
+door.receiveShadow = true;
+doorGroup.add(door);
+
+// Ручка двери
+const doorHandle = new THREE.Mesh(
+  new THREE.SphereGeometry(0.1, 12, 12),
+  new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.9, roughness: 0.2 })
+);
+doorHandle.position.set(15.7, 1.5, 15);
+doorGroup.add(doorHandle);
+
+scene.add(doorGroup);
+
+const doorPosition = new THREE.Vector3(15, 1.5, 14.9);
+let doorOpen = false;
+let doorAngle = 0;
+
+// ============ ПАРТЫ (НЕПРОЗРАЧНЫЕ) ============
 const desks = [];
 function makeDesk(x, z) {
   const group = new THREE.Group();
   const top = new THREE.Mesh(
     new THREE.BoxGeometry(1.8, 0.1, 1.2),
-    new THREE.MeshStandardMaterial({ color: 0xc49a6c, roughness: 0.5 })
+    new THREE.MeshStandardMaterial({ color: 0xc49a6c, roughness: 0.5, transparent: false, opacity: 1.0 })
   );
   top.position.y = 0.9;
   top.castShadow = true;
@@ -506,7 +619,7 @@ function makeDesk(x, z) {
   group.add(top);
   
   const legGeo = new THREE.BoxGeometry(0.08, 0.9, 0.08);
-  const legMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.6 });
+  const legMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.6, transparent: false, opacity: 1.0 });
   [[-0.8, -0.5], [0.8, -0.5], [-0.8, 0.5], [0.8, 0.5]].forEach(([lx, lz]) => {
     const leg = new THREE.Mesh(legGeo, legMat);
     leg.position.set(lx, 0.45, lz);
@@ -516,7 +629,7 @@ function makeDesk(x, z) {
   
   const seat = new THREE.Mesh(
     new THREE.BoxGeometry(0.6, 0.08, 0.6),
-    new THREE.MeshStandardMaterial({ color: 0xb8865a })
+    new THREE.MeshStandardMaterial({ color: 0xb8865a, transparent: false, opacity: 1.0 })
   );
   seat.position.set(0, 0.55, 0.9);
   seat.castShadow = true;
@@ -524,7 +637,7 @@ function makeDesk(x, z) {
   
   const back = new THREE.Mesh(
     new THREE.BoxGeometry(0.6, 0.7, 0.08),
-    new THREE.MeshStandardMaterial({ color: 0xb8865a })
+    new THREE.MeshStandardMaterial({ color: 0xb8865a, transparent: false, opacity: 1.0 })
   );
   back.position.set(0, 0.9, 1.2);
   back.castShadow = true;
@@ -564,7 +677,7 @@ for (let i = 0; i < 3; i++) {
 
 const teacherDesk = new THREE.Mesh(
   new THREE.BoxGeometry(3, 0.9, 1.5),
-  new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.5 })
+  new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.5, transparent: false, opacity: 1.0 })
 );
 teacherDesk.position.set(0, 0.45, -10);
 teacherDesk.castShadow = true;
@@ -572,20 +685,18 @@ teacherDesk.receiveShadow = true;
 scene.add(teacherDesk);
 desks.push({ x: 0, z: -10, radius: 1.8 });
 
-// ============ КАМЕРЫ ВИДЕОНАБЛЮДЕНИЯ ============
+// ============ КАМЕРЫ ============
 const securityCameras = [];
-// 4 угла класса - высоко на стенах
 const cameraPositions = [
-  { x: -18, y: 4.5, z: -13, lookAt: { x: 0, y: 1.5, z: 0 } },   // задний левый
-  { x: 18,  y: 4.5, z: -13, lookAt: { x: 0, y: 1.5, z: 0 } },   // задний правый
-  { x: -18, y: 4.5, z: 13,  lookAt: { x: 0, y: 1.5, z: 0 } },   // передний левый
-  { x: 18,  y: 4.5, z: 13,  lookAt: { x: 0, y: 1.5, z: 0 } }    // передний правый
+  { x: -18, y: 4.5, z: -13, lookAt: { x: 0, y: 1.5, z: 0 } },
+  { x: 18,  y: 4.5, z: -13, lookAt: { x: 0, y: 1.5, z: 0 } },
+  { x: -18, y: 4.5, z: 13,  lookAt: { x: 0, y: 1.5, z: 0 } },
+  { x: 18,  y: 4.5, z: 13,  lookAt: { x: 0, y: 1.5, z: 0 } }
 ];
 
 function makeSecurityCamera(pos, lookAt) {
   const group = new THREE.Group();
   
-  // Крепление на стене/потолке
   const mount = new THREE.Mesh(
     new THREE.CylinderGeometry(0.15, 0.15, 0.3, 12),
     new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8, roughness: 0.3 })
@@ -593,7 +704,6 @@ function makeSecurityCamera(pos, lookAt) {
   mount.position.y = 0;
   group.add(mount);
   
-  // "Рука" камеры
   const arm = new THREE.Mesh(
     new THREE.BoxGeometry(0.1, 0.5, 0.1),
     new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.7 })
@@ -601,19 +711,16 @@ function makeSecurityCamera(pos, lookAt) {
   arm.position.y = -0.3;
   group.add(arm);
   
-  // Поворотная часть (вращается)
   const pivot = new THREE.Group();
   pivot.position.y = -0.55;
   group.add(pivot);
   
-  // Корпус камеры
   const body = new THREE.Mesh(
     new THREE.BoxGeometry(0.4, 0.25, 0.25),
     new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.7, roughness: 0.4 })
   );
   pivot.add(body);
   
-  // Объектив
   const lens = new THREE.Mesh(
     new THREE.CylinderGeometry(0.1, 0.12, 0.15, 16),
     new THREE.MeshStandardMaterial({ color: 0x000000, metalness: 0.9, roughness: 0.1 })
@@ -622,7 +729,6 @@ function makeSecurityCamera(pos, lookAt) {
   lens.position.x = 0.25;
   pivot.add(lens);
   
-  // Стекло объектива
   const lensGlass = new THREE.Mesh(
     new THREE.CircleGeometry(0.09, 16),
     new THREE.MeshStandardMaterial({ 
@@ -634,7 +740,6 @@ function makeSecurityCamera(pos, lookAt) {
   lensGlass.position.x = 0.32;
   pivot.add(lensGlass);
   
-  // Красная лампочка-индикатор
   const ledMat = new THREE.MeshStandardMaterial({ 
     color: 0xff0000, 
     emissive: 0xff0000, 
@@ -647,14 +752,12 @@ function makeSecurityCamera(pos, lookAt) {
   led.position.set(0, 0.15, 0);
   pivot.add(led);
   
-  // Свет от лампочки
   const ledLight = new THREE.PointLight(0xff0000, 0.5, 3);
   ledLight.position.set(0, 0.15, 0);
   pivot.add(ledLight);
   
   group.position.set(pos.x, pos.y, pos.z);
   
-  // Направляем камеру в сторону центра
   const lookTarget = new THREE.Vector3(lookAt.x, lookAt.y, lookAt.z);
   const camPos = new THREE.Vector3(pos.x, pos.y, pos.z);
   const dir = new THREE.Vector3().subVectors(lookTarget, camPos);
@@ -673,16 +776,14 @@ function makeSecurityCamera(pos, lookAt) {
     baseRotationY: rotY,
     broken: false,
     breakTime: 0,
-    scanPhase: Math.random() * Math.PI * 2, // фаза сканирования
-    scanSpeed: 0.5 + Math.random() * 0.3,   // скорость сканирования
+    scanPhase: Math.random() * Math.PI * 2,
+    scanSpeed: 0.5 + Math.random() * 0.3,
     sightRange: 25,
-    sightAngle: 0.8,
-    originalParts: [] // для анимации поломки
+    sightAngle: 0.8
   };
 }
 
 function spawnSecurityCameras() {
-  // Удаляем старые
   securityCameras.forEach(c => scene.remove(c.group));
   securityCameras.length = 0;
   
@@ -800,6 +901,14 @@ function makeTeacher(colorScheme, startX, startZ, speedMultiplier) {
   handR.position.set(0.45, 0.85, 0);
   group.add(handR);
   
+  // Учебник географии в правой руке
+  const textbook = new THREE.Mesh(
+    new THREE.BoxGeometry(0.25, 0.35, 0.05),
+    new THREE.MeshStandardMaterial({ color: 0x0066cc, roughness: 0.6 })
+  );
+  textbook.position.set(0.45, 0.85, 0.15);
+  group.add(textbook);
+  
   const legGeo = new THREE.BoxGeometry(0.22, 0.8, 0.22);
   const legMat = new THREE.MeshStandardMaterial({ color: colorScheme.pants, roughness: 0.7 });
   const legL = new THREE.Mesh(legGeo, legMat);
@@ -842,7 +951,10 @@ function makeTeacher(colorScheme, startX, startZ, speedMultiplier) {
     dodgeSpeed: 8,
     dodgeOffset: new THREE.Vector3(),
     alertTime: 0,
-    startBasePos: new THREE.Vector3(startX, 0, startZ)
+    startBasePos: new THREE.Vector3(startX, 0, startZ),
+    attackCooldown: 0,
+    isAttacking: false,
+    attackTime: 0
   };
 }
 
@@ -932,7 +1044,76 @@ function createBanana() {
 
 let cameraKick = 0;
 
-// ============ ПРОВЕРКА: СМОТРИТ ЛИ УЧИТЕЛЬ/КАМЕРА НА ИГРОКА ============
+// ============ ПРЫЖОК ============
+let playerVelocityY = 0;
+let isJumping = false;
+const GRAVITY = -20;
+const JUMP_FORCE = 8;
+
+// ============ МАТЕМАТИЧЕСКИЕ ПРИМЕРЫ ============
+let currentMathProblem = null;
+let mathProblemActive = false;
+
+function generateMathProblem() {
+  const operations = ['+', '-', '*'];
+  const op = operations[Math.floor(Math.random() * operations.length)];
+  let a, b, answer;
+  
+  if (op === '+') {
+    a = Math.floor(Math.random() * 50) + 1;
+    b = Math.floor(Math.random() * 50) + 1;
+    answer = a + b;
+  } else if (op === '-') {
+    a = Math.floor(Math.random() * 50) + 10;
+    b = Math.floor(Math.random() * a);
+    answer = a - b;
+  } else {
+    a = Math.floor(Math.random() * 12) + 1;
+    b = Math.floor(Math.random() * 12) + 1;
+    answer = a * b;
+  }
+  
+  return { text: `${a} ${op} ${b} = ?`, answer };
+}
+
+function showMathProblem() {
+  if (mathProblemActive) return;
+  
+  currentMathProblem = generateMathProblem();
+  document.getElementById('problemText').textContent = currentMathProblem.text;
+  document.getElementById('answerInput').value = '';
+  document.getElementById('mathProblem').style.display = 'block';
+  document.getElementById('answerInput').focus();
+  mathProblemActive = true;
+  controls.unlock();
+}
+
+function submitAnswer() {
+  const userAnswer = parseInt(document.getElementById('answerInput').value);
+  
+  if (userAnswer === currentMathProblem.answer) {
+    bananasLeft += 2;
+    score += 50;
+    playSound('correct');
+    document.getElementById('mathProblem').style.display = 'none';
+    mathProblemActive = false;
+    updateUI();
+    controls.lock();
+  } else {
+    playSound('wrong');
+    document.getElementById('answerInput').style.borderColor = '#ff0000';
+    setTimeout(() => {
+      document.getElementById('answerInput').style.borderColor = '#ffd700';
+    }, 500);
+  }
+}
+
+document.getElementById('submitAnswer').addEventListener('click', submitAnswer);
+document.getElementById('answerInput').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') submitAnswer();
+});
+
+// ============ ПРОВЕРКА: СМОТРИТ ЛИ УЧИТЕЛЬ/КАМЕРА ============
 function isTeacherLookingAtPlayer(teacher) {
   const config = levelConfig[currentLevel];
   const teacherPos = teacher.group.position.clone();
@@ -971,11 +1152,10 @@ function isCameraLookingAtPlayer(secCamera) {
   
   toPlayer.normalize();
   
-  // Направление взгляда камеры (с учётом поворота pivot)
   const totalRotY = secCamera.baseRotationY + secCamera.pivot.rotation.y;
   const lookDir = new THREE.Vector3(
     Math.sin(totalRotY),
-    -0.3, // камера немного смотрит вниз
+    -0.3,
     Math.cos(totalRotY)
   ).normalize();
   
@@ -1015,7 +1195,6 @@ function throwBanana() {
   playSound('throw');
   cameraKick = 0.3;
   
-  // Проверка: заметили ли учителя
   for (const t of teachers) {
     if (t.hitTime > 0) continue;
     if (isTeacherLookingAtPlayer(t)) {
@@ -1024,7 +1203,6 @@ function throwBanana() {
     }
   }
   
-  // Проверка: заметили ли камеры
   for (const c of securityCameras) {
     if (c.broken) continue;
     if (isCameraLookingAtPlayer(c)) {
@@ -1178,7 +1356,6 @@ function spawnDodgeParticles(position) {
   }
 }
 
-// Эффект разбития камеры
 function spawnCameraBreakParticles(position) {
   const colors = [0x333333, 0x555555, 0x222222, 0x888888, 0xff0000, 0x2244aa];
   for (let i = 0; i < 40; i++) {
@@ -1211,7 +1388,6 @@ function spawnCameraBreakParticles(position) {
     });
   }
   
-  // Искры
   for (let i = 0; i < 15; i++) {
     const geo = new THREE.SphereGeometry(0.03, 6, 6);
     const mat = new THREE.MeshStandardMaterial({ 
@@ -1239,756 +1415,4 @@ const controls = new PointerLockControls(camera, document.body);
 const move = { forward: false, backward: false, left: false, right: false, sprint: false };
 const velocity = new THREE.Vector3();
 
-document.addEventListener('keydown', (e) => {
-  if (e.code === 'KeyW') move.forward = true;
-  if (e.code === 'KeyS') move.backward = true;
-  if (e.code === 'KeyA') move.left = true;
-  if (e.code === 'KeyD') move.right = true;
-  if (e.code === 'ShiftLeft') move.sprint = true;
-});
-document.addEventListener('keyup', (e) => {
-  if (e.code === 'KeyW') move.forward = false;
-  if (e.code === 'KeyS') move.backward = false;
-  if (e.code === 'KeyA') move.left = false;
-  if (e.code === 'KeyD') move.right = false;
-  if (e.code === 'ShiftLeft') move.sprint = false;
-});
-
-document.addEventListener('mousedown', (e) => {
-  if (e.button === 0 && controls.isLocked) throwBanana();
-});
-
-document.getElementById('startBtn').addEventListener('click', () => {
-  document.getElementById('menu').style.display = 'none';
-  lives = MAX_LIVES;
-  cameraLevelsLeft = CAMERA_GRACE_LEVELS;
-  startLevel(1);
-  controls.lock();
-});
-
-document.getElementById('nextLevelBtn').addEventListener('click', () => {
-  document.getElementById('levelComplete').style.display = 'none';
-  currentLevel++;
-  startLevel(currentLevel);
-  controls.lock();
-});
-
-document.getElementById('restartBtn').addEventListener('click', () => {
-  document.getElementById('gameOver').style.display = 'none';
-  currentLevel = 1;
-  totalScore = 0;
-  lives = MAX_LIVES;
-  cameraLevelsLeft = CAMERA_GRACE_LEVELS;
-  document.getElementById('menu').style.display = 'flex';
-});
-
-document.getElementById('retryBtn').addEventListener('click', () => {
-  document.getElementById('gameOverScreen').style.display = 'none';
-  lives = MAX_LIVES;
-  cameraLevelsLeft = CAMERA_GRACE_LEVELS;
-  currentLevel = 1;
-  totalScore = 0;
-  document.getElementById('menu').style.display = 'flex';
-});
-
-controls.addEventListener('lock', () => {
-  document.getElementById('menu').style.display = 'none';
-});
-controls.addEventListener('unlock', () => {
-  if (gameRunning && 
-      document.getElementById('levelComplete').style.display === 'none' &&
-      document.getElementById('gameOver').style.display === 'none' &&
-      document.getElementById('gameOverScreen').style.display === 'none') {
-    document.getElementById('menu').style.display = 'flex';
-  }
-});
-
-// ============ ЗВУК ============
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-function playSound(type) {
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  
-  if (type === 'throw') {
-    osc.frequency.setValueAtTime(500, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.15);
-    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.15);
-  } else if (type === 'hit') {
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.3);
-    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.3);
-  } else if (type === 'dodge') {
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.15);
-    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.2);
-  } else if (type === 'caught') {
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.5);
-    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.5);
-    
-    const o2 = audioCtx.createOscillator();
-    const g2 = audioCtx.createGain();
-    o2.connect(g2);
-    g2.connect(audioCtx.destination);
-    o2.type = 'square';
-    o2.frequency.setValueAtTime(200, audioCtx.currentTime + 0.1);
-    o2.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.6);
-    g2.gain.setValueAtTime(0.2, audioCtx.currentTime + 0.1);
-    g2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
-    o2.start(audioCtx.currentTime + 0.1);
-    o2.stop(audioCtx.currentTime + 0.6);
-  } else if (type === 'cameraBreak') {
-    // Звук разбития камеры - хруст + электрический треск
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.4);
-    gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.4);
-    
-    // Треск
-    const o2 = audioCtx.createOscillator();
-    const g2 = audioCtx.createGain();
-    o2.connect(g2);
-    g2.connect(audioCtx.destination);
-    o2.type = 'square';
-    o2.frequency.setValueAtTime(80, audioCtx.currentTime);
-    o2.frequency.linearRampToValueAtTime(40, audioCtx.currentTime + 0.6);
-    g2.gain.setValueAtTime(0.3, audioCtx.currentTime);
-    g2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
-    o2.start(audioCtx.currentTime);
-    o2.stop(audioCtx.currentTime + 0.6);
-    
-    // Стеклянный звон
-    const o3 = audioCtx.createOscillator();
-    const g3 = audioCtx.createGain();
-    o3.connect(g3);
-    g3.connect(audioCtx.destination);
-    o3.type = 'sine';
-    o3.frequency.setValueAtTime(2000, audioCtx.currentTime + 0.05);
-    o3.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.5);
-    g3.gain.setValueAtTime(0.15, audioCtx.currentTime + 0.05);
-    g3.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-    o3.start(audioCtx.currentTime + 0.05);
-    o3.stop(audioCtx.currentTime + 0.5);
-  } else if (type === 'levelUp') {
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.5);
-    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.5);
-  } else if (type === 'victory') {
-    const notes = [523, 659, 784, 1047];
-    notes.forEach((freq, i) => {
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      o.connect(g);
-      g.connect(audioCtx.destination);
-      o.type = 'sine';
-      o.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.15);
-      g.gain.setValueAtTime(0.2, audioCtx.currentTime + i * 0.15);
-      g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + i * 0.15 + 0.3);
-      o.start(audioCtx.currentTime + i * 0.15);
-      o.stop(audioCtx.currentTime + i * 0.15 + 0.3);
-    });
-  } else if (type === 'cameraWarning') {
-    // Тревожный звук
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-    osc.frequency.setValueAtTime(400, audioCtx.currentTime + 0.1);
-    osc.frequency.setValueAtTime(600, audioCtx.currentTime + 0.2);
-    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.3);
-  }
-}
-
-// ============ ИГРОВАЯ ЛОГИКА ============
-let score = 0;
-let bananasLeft = 20;
-let combo = 0;
-let comboTimer = 0;
-let gameRunning = true;
-
-function updateUI() {
-  const config = levelConfig[currentLevel];
-  document.getElementById('level').textContent = `Уровень ${currentLevel} / ${MAX_LEVEL}`;
-  document.getElementById('score').textContent = `Очки: ${totalScore + score}`;
-  document.getElementById('progress').textContent = `Попадания: ${hitsThisLevel} / ${config.hitsNeeded}`;
-  document.getElementById('bananas').textContent = `🍌 Бананы: ${bananasLeft}`;
-  
-  let hearts = '';
-  for (let i = 0; i < MAX_LIVES; i++) {
-    hearts += i < lives ? '❤️' : '🖤';
-  }
-  document.getElementById('lives').textContent = hearts;
-  
-  const activeCams = getActiveCamerasCount();
-  const totalCams = securityCameras.length;
-  document.getElementById('cameras').textContent = `📹 Камеры: ${activeCams}/${totalCams} | ⏳ До проигрыша: ${cameraLevelsLeft} ур.`;
-  
-  const warningEl = document.getElementById('cameraWarning');
-  if (activeCams > 0 && cameraLevelsLeft <= 1) {
-    warningEl.style.display = 'block';
-    warningEl.textContent = `⚠️ КРИТИЧНО! Сломай камеры! Остался ${cameraLevelsLeft} уровень!`;
-  } else if (activeCams > 0 && cameraLevelsLeft <= 2) {
-    warningEl.style.display = 'block';
-    warningEl.textContent = `⚠️ ВНИМАНИЕ! Сломай камеры! Осталось ${cameraLevelsLeft} уровня!`;
-  } else {
-    warningEl.style.display = 'none';
-  }
-  
-  const comboEl = document.getElementById('combo');
-  if (combo > 1) {
-    comboEl.textContent = `🔥 КОМБО x${combo}!`;
-    comboEl.style.opacity = '1';
-  } else {
-    comboEl.style.opacity = '0';
-  }
-}
-
-function showHitEffect() {
-  const el = document.getElementById('hitEffect');
-  const texts = ['БАМ!', 'ПОПАЛ!', 'УУУХ!', 'БАНАН!', 'ОЙ!', 'АЙ!'];
-  el.textContent = texts[Math.floor(Math.random() * texts.length)];
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 400);
-}
-
-function showDodgeEffect() {
-  const el = document.getElementById('dodgeEffect');
-  const texts = ['УКЛОНИЛСЯ!', 'МИМО!', 'НЕ ПОПАЛ!', 'ЛОВКИЙ!'];
-  el.textContent = texts[Math.floor(Math.random() * texts.length)];
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 500);
-}
-
-function showCaughtEffect() {
-  const el = document.getElementById('caughtEffect');
-  const texts = ['ПОЙМАЛИ!', 'ЗАСТУКАЛИ!', 'ПАЛЕВО!', 'СМОТРИТ!'];
-  el.textContent = texts[Math.floor(Math.random() * texts.length)];
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 600);
-}
-
-function showCameraBreakEffect() {
-  const el = document.getElementById('cameraBreakEffect');
-  const texts = ['💥 КАМЕРА СЛОМАНА!', '🔨 РАЗБИЛ!', '⚡ НЕ ДОСТУПНА!', '🎯 ТОЧНО В ЦЕЛЬ!'];
-  el.textContent = texts[Math.floor(Math.random() * texts.length)];
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 700);
-}
-
-function showDamageFlash() {
-  const el = document.getElementById('damageFlash');
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 400);
-}
-
-function startLevel(level) {
-  currentLevel = level;
-  hitsThisLevel = 0;
-  dodgesThisLevel = 0;
-  score = 0;
-  bananasLeft = 20;
-  combo = 0;
-  comboTimer = 0;
-  gameRunning = true;
-  
-  spawnTeachersForLevel(level);
-  
-  // Камеры спавним только в начале - они остаются между уровнями
-  if (securityCameras.length === 0) {
-    spawnSecurityCameras();
-  }
-  
-  updateUI();
-}
-
-function completeLevel() {
-  gameRunning = false;
-  controls.unlock();
-  
-  totalScore += score;
-  playSound('levelUp');
-  
-  // Проверка камер: если есть работающие - уменьшаем счётчик
-  const activeCams = getActiveCamerasCount();
-  if (activeCams > 0) {
-    cameraLevelsLeft--;
-    playSound('cameraWarning');
-    
-    if (cameraLevelsLeft <= 0) {
-      // Проигрыш из-за камер!
-      setTimeout(() => gameOver('Камеры видеонаблюдения записали тебя! 📹💀'), 500);
-      return;
-    }
-  } else {
-    // Все камеры сломаны - сбрасываем таймер
-    cameraLevelsLeft = CAMERA_GRACE_LEVELS;
-  }
-  
-  if (currentLevel >= MAX_LEVEL) {
-    showVictory();
-    return;
-  }
-  
-  const statsEl = document.getElementById('levelStats');
-  const camsAlive = getActiveCamerasCount();
-  let cameraStatusText = '';
-  if (camsAlive > 0) {
-    cameraStatusText = `<span style="color:#ff4444;">📹 Камеры работают! Осталось уровней: <b>${cameraLevelsLeft}</b></span>`;
-  } else {
-    cameraStatusText = `<span style="color:#00ff88;">✅ Все камеры сломаны!</span>`;
-  }
-  
-  statsEl.innerHTML = `
-    Уровень ${currentLevel} пройден!<br>
-    Очки за уровень: ${score}<br>
-    Учителей уклонилось: ${dodgesThisLevel}<br>
-    Осталось жизней: ${'❤️'.repeat(lives)}<br>
-    ${cameraStatusText}<br>
-    Всего очков: ${totalScore}<br>
-    <span style="color:#ffd700;">Следующий уровень: ${currentLevel + 1} / ${MAX_LEVEL}</span>
-  `;
-  
-  document.getElementById('levelComplete').style.display = 'flex';
-}
-
-function showVictory() {
-  playSound('victory');
-  const statsEl = document.getElementById('gameOverStats');
-  statsEl.innerHTML = `
-    🎊 Ты прошёл все 20 уровней! 🎊<br><br>
-    Итоговый счёт: <b style="color:#ffd700;">${totalScore}</b><br>
-    Осталось жизней: ${'❤️'.repeat(lives)}<br><br>
-    Ты — настоящий повелитель бананов! 🍌👑
-  `;
-  document.getElementById('gameOver').style.display = 'flex';
-}
-
-function gameOver(reason) {
-  gameRunning = false;
-  controls.unlock();
-  playSound('caught');
-  
-  const statsEl = document.getElementById('caughtStats');
-  statsEl.innerHTML = `
-    ${reason || 'Тебя поймали!'} 💀<br><br>
-    Уровень: <b>${currentLevel} / ${MAX_LEVEL}</b><br>
-    Очки: <b style="color:#ffd700;">${totalScore + score}</b><br><br>
-    Попробуй ещё раз!
-  `;
-  document.getElementById('gameOverScreen').style.display = 'flex';
-}
-
-function isBlockedByDesk(x, z, radius = 0.5) {
-  for (const d of desks) {
-    const dx = x - d.x;
-    const dz = z - d.z;
-    const dist = Math.sqrt(dx * dx + dz * dz);
-    if (dist < d.radius + radius) return true;
-  }
-  return false;
-}
-
-// ============ АНИМАЦИЯ ============
-const clock = new THREE.Clock();
-let lastBananaRegen = 0;
-
-function animate() {
-  requestAnimationFrame(animate);
-  const delta = Math.min(clock.getDelta(), 0.1);
-  const time = clock.getElapsedTime();
-  
-  if (controls.isLocked && gameRunning) {
-    const speed = move.sprint ? 9 : 5;
-    velocity.x -= velocity.x * 10 * delta;
-    velocity.z -= velocity.z * 10 * delta;
-    
-    const direction = new THREE.Vector3();
-    direction.z = Number(move.forward) - Number(move.backward);
-    direction.x = Number(move.right) - Number(move.left);
-    direction.normalize();
-    
-    if (move.forward || move.backward) velocity.z -= direction.z * speed * delta * 20;
-    if (move.left || move.right) velocity.x -= direction.x * speed * delta * 20;
-    
-    controls.moveRight(-velocity.x * delta);
-    controls.moveForward(-velocity.z * delta);
-    
-    camera.position.x = Math.max(-18, Math.min(18, camera.position.x));
-    camera.position.z = Math.max(-13, Math.min(14, camera.position.z));
-    camera.position.y = 1.6;
-    
-    const isMoving = move.forward || move.backward || move.left || move.right;
-    if (isMoving) {
-      const bobSpeed = move.sprint ? 14 : 10;
-      camera.position.y += Math.sin(time * bobSpeed) * 0.04;
-    }
-    
-    if (cameraKick > 0) {
-      const kickDir = new THREE.Vector3();
-      camera.getWorldDirection(kickDir);
-      camera.position.addScaledVector(kickDir, -cameraKick * 0.1);
-      cameraKick -= delta * 2;
-      if (cameraKick < 0) cameraKick = 0;
-    }
-    
-    const config = levelConfig[currentLevel];
-    
-    // ============ ОБНОВЛЕНИЕ КАМЕР ============
-    securityCameras.forEach(secCam => {
-      if (secCam.broken) {
-        // Анимация падения/исчезания
-        if (secCam.breakTime < 2) {
-          secCam.breakTime += delta;
-        }
-        return;
-      }
-      
-      // Сканирование - поворот pivot влево-вправо
-      secCam.scanPhase += delta * secCam.scanSpeed;
-      secCam.pivot.rotation.y = Math.sin(secCam.scanPhase) * 0.8;
-      
-      // Мигание красной лампочки
-      const blink = Math.sin(time * 4 + secCam.scanPhase) > 0;
-      secCam.ledMat.emissiveIntensity = blink ? 2.0 : 0.3;
-      secCam.ledLight.intensity = blink ? 0.8 : 0.1;
-    });
-    
-    // Обновление бананов
-    for (let i = bananas.length - 1; i >= 0; i--) {
-      const b = bananas[i];
-      b.velocity.y -= 18 * delta;
-      b.mesh.position.add(b.velocity.clone().multiplyScalar(delta));
-      b.mesh.rotation.x += b.angularVel.x * delta;
-      b.mesh.rotation.y += b.angularVel.y * delta;
-      b.mesh.rotation.z += b.angularVel.z * delta;
-      b.life -= delta;
-      
-      // ============ ПРОВЕРКА ПОПАДАНИЯ В КАМЕРУ ============
-      let cameraHit = false;
-      for (const secCam of securityCameras) {
-        if (secCam.broken) continue;
-        
-        const dist = b.mesh.position.distanceTo(secCam.position);
-        if (dist < 0.8) {
-          // Сломали камеру!
-          cameraHit = true;
-          secCam.broken = true;
-          secCam.breakTime = 0;
-          
-          spawnCameraBreakParticles(secCam.position.clone());
-          showCameraBreakEffect();
-          playSound('cameraBreak');
-          
-          // Бонусные очки
-          score += 250;
-          
-          // Визуально "выключаем" камеру - скрываем её
-          setTimeout(() => {
-            scene.remove(secCam.group);
-          }, 100);
-          
-          updateUI();
-          break;
-        }
-      }
-      
-      if (cameraHit) {
-        scene.remove(b.mesh);
-        bananas.splice(i, 1);
-        continue;
-      }
-      
-      // Уклонение учителей
-      for (const t of teachers) {
-        if (t.isDodging || t.hitTime > 0) continue;
-        
-        const hitInfo = willHitTeacher(b, t);
-        
-        if (hitInfo.willHit && hitInfo.timeToHit < config.dodgeReaction && hitInfo.timeToHit > 0.05) {
-          if (tryDodge(t, b, config)) {
-            dodgesThisLevel++;
-            showDodgeEffect();
-          }
-        }
-      }
-      
-      let hit = false;
-      for (const t of teachers) {
-        const hitRadius = t.isDodging ? 0.5 : 1.0;
-        
-        const tPos = t.group.position;
-        const dist = b.mesh.position.distanceTo(new THREE.Vector3(tPos.x, tPos.y + 1.3, tPos.z));
-        if (dist < hitRadius) {
-          hit = true;
-          combo++;
-          comboTimer = 2;
-          const points = 100 * combo;
-          score += points;
-          hitsThisLevel++;
-          t.hitTime = 0.5;
-          t.isDodging = false;
-          t.dodgeOffset.set(0, 0, 0);
-          spawnHitParticles(b.mesh.position.clone());
-          showHitEffect();
-          playSound('hit');
-          updateUI();
-          
-          if (hitsThisLevel >= config.hitsNeeded) {
-            setTimeout(() => completeLevel(), 500);
-          }
-          break;
-        }
-      }
-      
-      if (hit || b.life <= 0 || b.mesh.position.y < -2) {
-        scene.remove(b.mesh);
-        bananas.splice(i, 1);
-      }
-    }
-    
-    // Обновление частиц
-    for (let i = particles.length - 1; i >= 0; i--) {
-      const p = particles[i];
-      if (!p.isSprite) p.velocity.y -= 12 * delta;
-      p.mesh.position.add(p.velocity.clone().multiplyScalar(delta));
-      if (p.hasRotation && p.angularVel) {
-        p.mesh.rotation.x += p.angularVel.x * delta;
-        p.mesh.rotation.y += p.angularVel.y * delta;
-        p.mesh.rotation.z += p.angularVel.z * delta;
-      }
-      p.life -= delta;
-      if (p.mesh.material) {
-        p.mesh.material.transparent = true;
-        p.mesh.material.opacity = Math.max(0, p.life);
-      }
-      if (p.life <= 0) {
-        scene.remove(p.mesh);
-        particles.splice(i, 1);
-      }
-    }
-    
-    // Обновление учителей
-    teachers.forEach(t => {
-      if (t.dodgeCooldown > 0) t.dodgeCooldown -= delta;
-      if (t.alertTime > 0) t.alertTime -= delta;
-      
-      if (t.isDodging) {
-        t.dodgeTime += delta;
-        const progress = t.dodgeTime / t.dodgeDuration;
-        
-        if (progress < 1) {
-          const moveAmount = Math.sin(progress * Math.PI) * config.dodgeDistance;
-          t.dodgeOffset.copy(t.dodgeDir).multiplyScalar(moveAmount);
-          
-          t.group.position.x = t.startBasePos.x + t.dodgeOffset.x;
-          t.group.position.z = t.startBasePos.z + t.dodgeOffset.z;
-          
-          const jumpHeight = Math.sin(progress * Math.PI) * 0.4;
-          t.group.position.y = jumpHeight;
-          
-          const tiltAngle = Math.sin(progress * Math.PI) * 0.6;
-          t.group.rotation.z = tiltAngle * (t.dodgeDir.x > 0 ? -1 : 1);
-          
-          const armRaise = Math.sin(progress * Math.PI);
-          t.armL.rotation.x = -Math.PI * 0.7 * armRaise;
-          t.armR.rotation.x = -Math.PI * 0.7 * armRaise;
-          t.armL.rotation.z = -0.5 * armRaise;
-          t.armR.rotation.z = 0.5 * armRaise;
-          
-          t.legL.rotation.x = Math.sin(t.dodgeTime * 15) * 0.8;
-          t.legR.rotation.x = -Math.sin(t.dodgeTime * 15) * 0.8;
-          
-          if (progress < 0.15 && Math.random() < 0.3) {
-            spawnDodgeParticles(t.group.position);
-          }
-        } else {
-          t.isDodging = false;
-          t.dodgeOffset.set(0, 0, 0);
-          t.group.position.x = t.startBasePos.x;
-          t.group.position.z = t.startBasePos.z;
-          t.group.position.y = 0;
-          t.group.rotation.z = 0;
-          t.startBasePos.copy(t.group.position);
-        }
-      }
-      
-      t.targetTimer -= delta;
-      
-      const moved = t.group.position.distanceTo(t.lastPos);
-      if (moved < 0.01 && !t.isDodging) {
-        t.stuckTimer += delta;
-        if (t.stuckTimer > 1.0) {
-          pickNewTarget(t);
-          t.stuckTimer = 0;
-        }
-      } else if (!t.isDodging) {
-        t.stuckTimer = 0;
-      }
-      t.lastPos.copy(t.group.position);
-      
-      if (t.targetTimer <= 0 || (t.currentTarget && t.group.position.distanceTo(t.currentTarget) < 1.0)) {
-        pickNewTarget(t);
-        t.targetTimer = 3 + Math.random() * 4;
-      }
-      
-      if (t.currentTarget && t.hitTime <= 0 && !t.isDodging) {
-        const dx = t.currentTarget.x - t.group.position.x;
-        const dz = t.currentTarget.z - t.group.position.z;
-        const dist = Math.sqrt(dx * dx + dz * dz);
-        
-        if (dist > 0.1) {
-          const moveX = (dx / dist) * t.speed * delta;
-          const moveZ = (dz / dist) * t.speed * delta;
-          
-          const newX = t.group.position.x + moveX;
-          const newZ = t.group.position.z + moveZ;
-          
-          if (!isBlockedByDesk(newX, newZ, 0.5)) {
-            t.group.position.x = newX;
-            t.group.position.z = newZ;
-          } else {
-            const perpX = -dz / dist;
-            const perpZ = dx / dist;
-            const altX = t.group.position.x + perpX * t.speed * delta;
-            const altZ = t.group.position.z + perpZ * t.speed * delta;
-            if (!isBlockedByDesk(altX, altZ, 0.5)) {
-              t.group.position.x = altX;
-              t.group.position.z = altZ;
-            } else {
-              pickNewTarget(t);
-            }
-          }
-          
-          const targetRot = Math.atan2(dx, dz);
-          let rotDiff = targetRot - t.group.rotation.y;
-          while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
-          while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
-          t.group.rotation.y += rotDiff * Math.min(1, delta * 5);
-          
-          t.startBasePos.copy(t.group.position);
-          t.startBasePos.y = 0;
-        }
-      }
-      
-      t.group.position.x = Math.max(WALK_BOUNDS.minX, Math.min(WALK_BOUNDS.maxX, t.group.position.x));
-      t.group.position.z = Math.max(WALK_BOUNDS.minZ, Math.min(WALK_BOUNDS.maxZ, t.group.position.z));
-      
-      if (!t.isDodging && t.hitTime <= 0) {
-        const isWalking = t.currentTarget && t.group.position.distanceTo(t.currentTarget) > 0.5;
-        if (isWalking) {
-          t.walkPhase += delta * 6;
-          t.armL.rotation.x = Math.sin(t.walkPhase) * 0.5;
-          t.armR.rotation.x = -Math.sin(t.walkPhase) * 0.5;
-          t.legL.rotation.x = -Math.sin(t.walkPhase) * 0.6;
-          t.legR.rotation.x = Math.sin(t.walkPhase) * 0.6;
-          t.armL.rotation.z *= 0.9;
-          t.armR.rotation.z *= 0.9;
-          t.group.position.y = Math.abs(Math.sin(t.walkPhase)) * 0.05;
-        } else {
-          t.armL.rotation.x *= 0.9;
-          t.armR.rotation.x *= 0.9;
-          t.legL.rotation.x *= 0.9;
-          t.legR.rotation.x *= 0.9;
-          t.armL.rotation.z *= 0.9;
-          t.armR.rotation.z *= 0.9;
-          t.group.position.y *= 0.9;
-        }
-        
-        if (t.alertTime > 0 && bananas.length > 0) {
-          let nearestBanana = null;
-          let nearestDist = Infinity;
-          for (const b of bananas) {
-            const d = b.mesh.position.distanceTo(t.group.position);
-            if (d < nearestDist) {
-              nearestDist = d;
-              nearestBanana = b;
-            }
-          }
-          if (nearestBanana && nearestDist < 8) {
-            const toBanana = new THREE.Vector3().subVectors(nearestBanana.mesh.position, t.group.position);
-            toBanana.y = 0;
-            if (toBanana.length() > 0.1) {
-              const targetAngle = Math.atan2(toBanana.x, toBanana.z);
-              let headRot = targetAngle - t.group.rotation.y;
-              while (headRot > Math.PI) headRot -= Math.PI * 2;
-              while (headRot < -Math.PI) headRot += Math.PI * 2;
-              t.head.rotation.y = Math.max(-0.6, Math.min(0.6, headRot * 0.5));
-            }
-          }
-        } else {
-          t.head.rotation.y *= 0.9;
-        }
-      }
-      
-      if (t.hitTime > 0) {
-        t.hitTime -= delta;
-        const intensity = t.hitTime / 0.5;
-        const jump = Math.sin(t.hitTime * Math.PI * 4) * 0.3 * intensity;
-        t.group.position.y = Math.abs(jump);
-        t.group.rotation.z = Math.sin(t.hitTime * 30) * 0.25 * intensity;
-        t.armL.rotation.x = -Math.PI * 0.7;
-        t.armR.rotation.x = -Math.PI * 0.7;
-        t.armL.rotation.z = -0.3;
-        t.armR.rotation.z = 0.3;
-      } else if (!t.isDodging) {
-        t.group.rotation.z *= 0.9;
-        t.armL.rotation.z *= 0.9;
-        t.armR.rotation.z *= 0.9;
-      }
-    });
-    
-    if (comboTimer > 0) {
-      comboTimer -= delta;
-      if (comboTimer <= 0) {
-        combo = 0;
-        updateUI();
-      }
-    }
-    
-    lastBananaRegen += delta;
-    if (lastBananaRegen > config.bananaRegen && bananasLeft < 20) {
-      bananasLeft++;
-      lastBananaRegen = 0;
-      updateUI();
-    }
-  }
-  
-  renderer.render(scene, camera);
-}
-
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-animate();
-</script>
-</body>
-</html>
+document.addEventListener
