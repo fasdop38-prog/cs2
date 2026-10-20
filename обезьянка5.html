@@ -224,14 +224,8 @@ function makeWallTex() {
   return new THREE.CanvasTexture(c);
 }
 
-// ПОЛ - поднят на 0.01 чтобы избежать z-fighting
-const floor = new THREE.Mesh(
-  new THREE.PlaneGeometry(40, 40), 
-  new THREE.MeshStandardMaterial({map: makeFloorTex(), roughness: 0.7, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1})
-);
-floor.rotation.x = -Math.PI/2; 
-floor.position.y = 0.01; // Поднят чтобы не моргал
-floor.receiveShadow = true;
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshStandardMaterial({map: makeFloorTex(), roughness: 0.7}));
+floor.rotation.x = -Math.PI/2; floor.receiveShadow = true;
 scene.add(floor);
 
 const wallMat = new THREE.MeshStandardMaterial({map: makeWallTex(), roughness: 0.9});
@@ -263,7 +257,7 @@ const board = new THREE.Mesh(new THREE.PlaneGeometry(11.5, 4.5), new THREE.MeshS
 board.position.set(0, 3, -14.6); scene.add(board);
 const boardPosition = new THREE.Vector3(0, 2, -13.5);
 
-// ДВЕРЬ
+// ДВЕРЬ (просто декорация с анимацией открытия/закрытия)
 const doorPivot = new THREE.Group();
 doorPivot.position.set(14, 0, 14.85);
 scene.add(doorPivot);
@@ -279,22 +273,7 @@ doorFrame.position.set(15, 1.6, 14.85); scene.add(doorFrame);
 const doorPosition = new THREE.Vector3(15, 1.5, 14.9);
 let doorOpen = false, doorAngle = 0;
 
-// Уличная сцена
-const outdoorGroup = new THREE.Group();
-const grass = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), new THREE.MeshStandardMaterial({color:0x4a8c3a}));
-grass.rotation.x = -Math.PI/2; grass.position.set(15, 0.01, 40); grass.receiveShadow = true;
-outdoorGroup.add(grass);
-for (let i = 0; i < 8; i++) {
-  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 3, 8), new THREE.MeshStandardMaterial({color:0x5c3a1e}));
-  trunk.position.set(Math.random()*40 - 5, 1.5, 25 + Math.random()*30);
-  trunk.castShadow = true; outdoorGroup.add(trunk);
-  const leaves = new THREE.Mesh(new THREE.SphereGeometry(1.5, 12, 12), new THREE.MeshStandardMaterial({color:0x2d5016}));
-  leaves.position.set(trunk.position.x, 4, trunk.position.z);
-  leaves.castShadow = true; outdoorGroup.add(leaves);
-}
-scene.add(outdoorGroup);
-
-// ПАРТЫ
+// ПАРТЫ (НЕПРОЗРАЧНЫЕ)
 const desks = [];
 function makeDesk(x, z) {
   const g = new THREE.Group();
@@ -461,6 +440,7 @@ let cameraKick = 0;
 let playerVelocityY = 0, isOnGround = true;
 const GRAVITY = -20, JUMP_FORCE = 8;
 
+// МАТЕМАТИКА
 let currentMathProblem = null, mathProblemActive = false;
 function genMath() {
   const ops = ['+','-','*'];
@@ -798,16 +778,10 @@ function animate() {
       }
     }
     
-    const isOutside = doorOpen && camera.position.z > 14.5;
-    if (isOutside) {
-      camera.position.x = Math.max(-30, Math.min(40, camera.position.x));
-      camera.position.z = Math.max(14.5, Math.min(60, camera.position.z));
-    } else {
-      camera.position.x = Math.max(-18, Math.min(18, camera.position.x));
-      camera.position.z = Math.max(-13, Math.min(14, camera.position.z));
-      if (!isOnGround) camera.position.y = Math.min(camera.position.y, 1.6);
-      else camera.position.y = 1.6;
-    }
+    // Границы ТОЛЬКО внутри класса (улицы нет)
+    camera.position.x = Math.max(-18, Math.min(18, camera.position.x));
+    camera.position.z = Math.max(-13, Math.min(14, camera.position.z));
+    if (isOnGround) camera.position.y = 1.6;
     
     const isMoving = move.forward || move.backward || move.left || move.right;
     if (isMoving && isOnGround) {
@@ -821,15 +795,17 @@ function animate() {
       if (cameraKick < 0) cameraKick = 0;
     }
     
+    // Дверь (анимация открытия/закрытия)
     const targetDoorAngle = doorOpen ? -Math.PI/2 : 0;
     doorAngle += (targetDoorAngle - doorAngle) * Math.min(1, delta * 5);
     doorPivot.rotation.y = doorAngle;
     
+    // Подсказка взаимодействия
     const pp = camera.position;
     const doorDist = pp.distanceTo(doorPosition);
     const boardDist = new THREE.Vector3(pp.x,pp.y,pp.z).distanceTo(boardPosition);
     const hint = document.getElementById('interactionHint');
-    if (doorDist < 3) { hint.style.display = 'block'; hint.innerHTML = 'Нажми <b>E</b> — ' + (doorOpen ? 'закрыть дверь' : 'выйти на улицу'); }
+    if (doorDist < 3) { hint.style.display = 'block'; hint.innerHTML = 'Нажми <b>E</b> — ' + (doorOpen ? 'закрыть дверь' : 'открыть дверь'); }
     else if (boardDist < 3 && bananasLeft === 0) { hint.style.display = 'block'; hint.innerHTML = 'Нажми <b>E</b> — решить пример'; }
     else hint.style.display = 'none';
     
