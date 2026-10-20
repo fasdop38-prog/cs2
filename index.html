@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>CS2: Путь к Глобалу</title>
+<title>CS2: Путь к Глобалу 3D</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -26,9 +26,8 @@
     overflow: hidden;
     box-shadow: 0 0 40px rgba(245, 166, 35, 0.3);
   }
-  canvas {
+  #gameCanvas {
     display: block;
-    background: #2a2a2a;
     cursor: crosshair;
   }
   .overlay {
@@ -83,11 +82,6 @@
     box-shadow: 0 6px 18px rgba(245, 166, 35, 0.5);
   }
   .btn:active { transform: translateY(0); }
-  .btn.secondary {
-    background: #333;
-    color: #f5a623;
-    border: 1px solid #f5a623;
-  }
   #hud {
     position: absolute;
     top: 0; left: 0;
@@ -193,11 +187,68 @@
     text-transform: uppercase;
     letter-spacing: 1px;
   }
+  #crosshair {
+    position: absolute;
+    pointer-events: none;
+    width: 30px;
+    height: 30px;
+    z-index: 4;
+    transform: translate(-50%, -50%);
+    display: none;
+  }
+  #crosshair::before, #crosshair::after {
+    content: '';
+    position: absolute;
+    background: #f5a623;
+    box-shadow: 0 0 4px rgba(0,0,0,0.8);
+  }
+  #crosshair::before {
+    top: 50%; left: 0; right: 0; height: 2px;
+    transform: translateY(-50%);
+  }
+  #crosshair::after {
+    left: 50%; top: 0; bottom: 0; width: 2px;
+    transform: translateX(-50%);
+  }
+  #reloadBar {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 8px;
+    background: rgba(0,0,0,0.7);
+    border-radius: 4px;
+    overflow: hidden;
+    z-index: 5;
+    display: none;
+  }
+  #reloadBar .fill {
+    height: 100%;
+    background: #f5a623;
+    width: 0%;
+    transition: width 0.05s linear;
+  }
+  #reloadText {
+    position: absolute;
+    bottom: 55px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #f5a623;
+    font-weight: bold;
+    font-size: 14px;
+    z-index: 5;
+    display: none;
+    letter-spacing: 2px;
+  }
 </style>
 </head>
 <body>
 <div id="gameContainer">
   <canvas id="gameCanvas" width="1000" height="650"></canvas>
+  <div id="crosshair"></div>
+  <div id="reloadText">ПЕРЕЗАРЯДКА</div>
+  <div id="reloadBar"><div class="fill"></div></div>
   
   <div id="hud" class="hidden">
     <div class="hud-block">❤️ HP: <span id="hudHp">100</span></div>
@@ -207,18 +258,16 @@
     <div class="hud-block">💀 Враги: <span id="hudEnemies">0</span></div>
   </div>
 
-  <!-- Главное меню -->
   <div id="menuScreen" class="overlay">
     <h1>CS2: ПУТЬ К ГЛОБАЛУ</h1>
-    <div class="rank-badge">★ ПРОЙДИ 10 УРОВНЕЙ ★</div>
-    <p>Ты начинаешь как Сильвер 1. Пройди все уровни, купи оружие в магазине, победи врагов и стань Глобал Элит!</p>
+    <div class="rank-badge">★ 3D ИЗДАНИЕ ★</div>
+    <p>Ты начинаешь как Сильвер 1. Пройди все 10 уровней, купи оружие в магазине, победи врагов и стань Глобал Элит!</p>
     <button class="btn" onclick="startGame()">НАЧАТЬ ИГРУ</button>
     <div class="controls-info">
       <p><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> — движение | <kbd>Мышь</kbd> — прицел | <kbd>ЛКМ</kbd> — стрельба | <kbd>R</kbd> — перезарядка</p>
     </div>
   </div>
 
-  <!-- Магазин -->
   <div id="shopScreen" class="overlay hidden">
     <h2>🛒 МАГАЗИН ОРУЖИЯ</h2>
     <p>Баланс: <span id="shopMoney" style="color:#4CAF50;font-weight:bold;">$800</span></p>
@@ -226,7 +275,6 @@
     <button class="btn" onclick="startLevel()">В БОЙ →</button>
   </div>
 
-  <!-- Уровень пройден -->
   <div id="levelCompleteScreen" class="overlay hidden">
     <h1>УРОВЕНЬ ПРОЙДЕН!</h1>
     <div class="rank-badge" id="newRank">Сильвер 2</div>
@@ -247,7 +295,6 @@
     <button class="btn" onclick="openShop()">МАГАЗИН →</button>
   </div>
 
-  <!-- Конец игры -->
   <div id="gameOverScreen" class="overlay hidden">
     <h1 style="color:#ff4444;">ПОРАЖЕНИЕ</h1>
     <p>Ты пал в бою. Но путь к Глобалу продолжается!</p>
@@ -264,7 +311,6 @@
     <button class="btn" onclick="restartGame()">НАЧАТЬ ЗАНОВО</button>
   </div>
 
-  <!-- Победа -->
   <div id="victoryScreen" class="overlay hidden">
     <h1>🏆 ГЛОБАЛ ЭЛИТ!</h1>
     <p>Поздравляем! Ты прошел все 10 уровней и достиг вершины рейтинга CS2!</p>
@@ -278,14 +324,98 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <script>
+// ===== THREE.JS SETUP =====
 const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
 const W = canvas.width;
 const H = canvas.height;
 
-// ===== СОСТОЯНИЕ ИГРЫ =====
-let gameState = 'menu'; // menu, playing, shop, levelComplete, gameOver, victory
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setSize(W, H);
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.setClearColor(0x1a1a2e);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x1a1a2e, 600, 1500);
+
+// Camera - top-down angled view
+const camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 3000);
+
+// Lighting
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
+scene.add(ambientLight);
+
+const dirLight = new THREE.DirectionalLight(0xffeecc, 0.9);
+dirLight.position.set(300, 500, 200);
+dirLight.castShadow = true;
+dirLight.shadow.mapSize.width = 2048;
+dirLight.shadow.mapSize.height = 2048;
+dirLight.shadow.camera.left = -600;
+dirLight.shadow.camera.right = 600;
+dirLight.shadow.camera.top = 600;
+dirLight.shadow.camera.bottom = -600;
+dirLight.shadow.camera.near = 1;
+dirLight.shadow.camera.far = 1500;
+scene.add(dirLight);
+
+const fillLight = new THREE.DirectionalLight(0x4a90e2, 0.25);
+fillLight.position.set(-300, 300, -200);
+scene.add(fillLight);
+
+// ===== WORLD CONSTANTS =====
+const WORLD_W = 1000;
+const WORLD_H = 650;
+
+// Floor
+const floorTexture = (() => {
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 256;
+  const cx = c.getContext('2d');
+  cx.fillStyle = '#3a3a3a';
+  cx.fillRect(0, 0, 256, 256);
+  cx.strokeStyle = '#2a2a2a';
+  cx.lineWidth = 2;
+  for (let i = 0; i <= 256; i += 32) {
+    cx.beginPath(); cx.moveTo(i, 0); cx.lineTo(i, 256); cx.stroke();
+    cx.beginPath(); cx.moveTo(0, i); cx.lineTo(256, i); cx.stroke();
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(WORLD_W / 64, WORLD_H / 64);
+  return tex;
+})();
+
+const floor = new THREE.Mesh(
+  new THREE.PlaneGeometry(WORLD_W, WORLD_H),
+  new THREE.MeshStandardMaterial({ map: floorTexture, roughness: 0.9 })
+);
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
+scene.add(floor);
+
+// Boundary walls (visual)
+function makeBoundaryWall(x, z, w, d) {
+  const wall = new THREE.Mesh(
+    new THREE.BoxGeometry(w, 40, d),
+    new THREE.MeshStandardMaterial({ color: 0x2a2a3e, roughness: 0.7 })
+  );
+  wall.position.set(x, 20, z);
+  wall.castShadow = true;
+  wall.receiveShadow = true;
+  scene.add(wall);
+  return wall;
+}
+const boundaryWalls = [];
+boundaryWalls.push(makeBoundaryWall(0, -WORLD_H/2 - 10, WORLD_W + 40, 20));
+boundaryWalls.push(makeBoundaryWall(0, WORLD_H/2 + 10, WORLD_W + 40, 20));
+boundaryWalls.push(makeBoundaryWall(-WORLD_W/2 - 10, 0, 20, WORLD_H + 40));
+boundaryWalls.push(makeBoundaryWall(WORLD_W/2 + 10, 0, 20, WORLD_H + 40));
+
+// ===== GAME STATE =====
+let gameState = 'menu';
 let currentLevel = 1;
 let money = 800;
 let totalKills = 0;
@@ -293,27 +423,24 @@ let levelKills = 0;
 let shotsFired = 0;
 let shotsHit = 0;
 
-// ===== ОРУЖИЕ =====
 const WEAPONS = {
-  pistol: { name: 'Пистолет', damage: 25, fireRate: 400, magSize: 12, reserve: 36, reloadTime: 1500, spread: 0.03, bulletSpeed: 14, price: 0, color: '#f5a623' },
-  usp: { name: 'USP-S', damage: 35, fireRate: 350, magSize: 12, reserve: 24, reloadTime: 1600, spread: 0.015, bulletSpeed: 16, price: 200, color: '#4CAF50' },
-  mp9: { name: 'MP9', damage: 22, fireRate: 90, magSize: 30, reserve: 120, reloadTime: 2100, spread: 0.06, bulletSpeed: 15, price: 1250, color: '#2196F3' },
-  ak47: { name: 'AK-47', damage: 45, fireRate: 100, magSize: 30, reserve: 90, reloadTime: 2500, spread: 0.04, bulletSpeed: 18, price: 2700, color: '#ff5722' },
-  awp: { name: 'AWP', damage: 150, fireRate: 1500, magSize: 5, reserve: 20, reloadTime: 3500, spread: 0.005, bulletSpeed: 25, price: 4750, color: '#9C27B0' }
+  pistol: { name: 'Пистолет', damage: 25, fireRate: 400, magSize: 12, reserve: 36, reloadTime: 1500, spread: 0.03, bulletSpeed: 14, price: 0, color: 0xf5a623 },
+  usp: { name: 'USP-S', damage: 35, fireRate: 350, magSize: 12, reserve: 24, reloadTime: 1600, spread: 0.015, bulletSpeed: 16, price: 200, color: 0x4CAF50 },
+  mp9: { name: 'MP9', damage: 22, fireRate: 90, magSize: 30, reserve: 120, reloadTime: 2100, spread: 0.06, bulletSpeed: 15, price: 1250, color: 0x2196F3 },
+  ak47: { name: 'AK-47', damage: 45, fireRate: 100, magSize: 30, reserve: 90, reloadTime: 2500, spread: 0.04, bulletSpeed: 18, price: 2700, color: 0xff5722 },
+  awp: { name: 'AWP', damage: 150, fireRate: 1500, magSize: 5, reserve: 20, reloadTime: 3500, spread: 0.005, bulletSpeed: 25, price: 4750, color: 0x9C27B0 }
 };
 
-// ===== РАНГИ =====
 const RANKS = [
   'Сильвер 1', 'Сильвер 2', 'Сильвер 3', 'Сильвер Элит',
   'Голд Нова 1', 'Голд Нова 2', 'Голд Нова Мастер',
   'Магистр-Хранитель', 'Легендарный Беркут', 'ГЛОБАЛ ЭЛИТ'
 ];
 
-// ===== ИГРОК =====
 const player = {
-  x: W / 2,
-  y: H / 2,
+  x: 0, y: 0, z: 0,
   radius: 16,
+  height: 30,
   speed: 3.2,
   hp: 100,
   maxHp: 100,
@@ -325,138 +452,196 @@ const player = {
   reserve: 36,
   lastShot: 0,
   reloading: false,
-  reloadStart: 0,
-  vx: 0,
-  vy: 0
+  reloadStart: 0
 };
 
-// ===== ВРАГИ, ПУЛИ, ПРЕПЯТСТВИЯ =====
+// Player 3D mesh
+const playerGroup = new THREE.Group();
+const playerBody = new THREE.Mesh(
+  new THREE.CylinderGeometry(14, 14, 30, 16),
+  new THREE.MeshStandardMaterial({ color: 0x4a90e2, roughness: 0.5, metalness: 0.3 })
+);
+playerBody.position.y = 15;
+playerBody.castShadow = true;
+playerGroup.add(playerBody);
+
+// Player head
+const playerHead = new THREE.Mesh(
+  new THREE.SphereGeometry(9, 16, 12),
+  new THREE.MeshStandardMaterial({ color: 0x6ab0ff, roughness: 0.4 })
+);
+playerHead.position.y = 32;
+playerHead.castShadow = true;
+playerGroup.add(playerHead);
+
+// Player weapon (gun)
+const playerGun = new THREE.Mesh(
+  new THREE.BoxGeometry(20, 4, 6),
+  new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.3, metalness: 0.7 })
+);
+playerGun.position.set(18, 18, 0);
+playerGun.castShadow = true;
+playerGroup.add(playerGun);
+
+scene.add(playerGroup);
+
 let enemies = [];
 let bullets = [];
 let enemyBullets = [];
 let obstacles = [];
 let particles = [];
-let damageNumbers = [];
 
-// ===== УПРАВЛЕНИЕ =====
 const keys = {};
 let mouseX = W / 2;
 let mouseY = H / 2;
 let mouseDown = false;
 
-// ===== ВВОД =====
+// Raycaster for mouse->world
+const raycaster = new THREE.Raycaster();
+const mouseNDC = new THREE.Vector2();
+const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+const intersectPoint = new THREE.Vector3();
+
 document.addEventListener('keydown', (e) => {
   keys[e.key.toLowerCase()] = true;
-  if (e.key.toLowerCase() === 'r' && gameState === 'playing') {
-    startReload();
-  }
+  if (e.key.toLowerCase() === 'r' && gameState === 'playing') startReload();
 });
-document.addEventListener('keyup', (e) => {
-  keys[e.key.toLowerCase()] = false;
-});
+document.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
+
 canvas.addEventListener('mousemove', (e) => {
   const rect = canvas.getBoundingClientRect();
   mouseX = (e.clientX - rect.left) * (W / rect.width);
   mouseY = (e.clientY - rect.top) * (H / rect.height);
+  
+  // Update crosshair position
+  const crosshair = document.getElementById('crosshair');
+  crosshair.style.left = mouseX + 'px';
+  crosshair.style.top = mouseY + 'px';
+  
+  // Raycast to ground
+  mouseNDC.x = (mouseX / W) * 2 - 1;
+  mouseNDC.y = -(mouseY / H) * 2 + 1;
+  raycaster.setFromCamera(mouseNDC, camera);
+  raycaster.ray.intersectPlane(groundPlane, intersectPoint);
+  if (intersectPoint) {
+    player.angle = Math.atan2(intersectPoint.z - player.z, intersectPoint.x - player.x);
+  }
 });
-canvas.addEventListener('mousedown', (e) => {
-  if (e.button === 0) mouseDown = true;
-});
-canvas.addEventListener('mouseup', (e) => {
-  if (e.button === 0) mouseDown = false;
-});
+canvas.addEventListener('mousedown', (e) => { if (e.button === 0) mouseDown = true; });
+canvas.addEventListener('mouseup', (e) => { if (e.button === 0) mouseDown = false; });
 canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
-// ===== УТИЛИТЫ =====
-function distance(x1, y1, x2, y2) {
-  return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+// ===== UTILITIES =====
+function distance(x1, z1, x2, z2) {
+  return Math.sqrt((x2 - x1) ** 2 + (z2 - z1) ** 2);
 }
 
-function lineRectIntersect(x1, y1, x2, y2, rx, ry, rw, rh) {
-  // Проверяем пересечение линии с прямоугольником
-  const left = lineLineIntersect(x1, y1, x2, y2, rx, ry, rx, ry + rh);
-  const right = lineLineIntersect(x1, y1, x2, y2, rx + rw, ry, rx + rw, ry + rh);
-  const top = lineLineIntersect(x1, y1, x2, y2, rx, ry, rx + rw, ry);
-  const bottom = lineLineIntersect(x1, y1, x2, y2, rx, ry + rh, rx + rw, ry + rh);
-  return left || right || top || bottom;
+function lineRectIntersect(x1, z1, x2, z2, rx, rz, rw, rd) {
+  return lineLineIntersect(x1, z1, x2, z2, rx, rz, rx, rz + rd) ||
+         lineLineIntersect(x1, z1, x2, z2, rx + rw, rz, rx + rw, rz + rd) ||
+         lineLineIntersect(x1, z1, x2, z2, rx, rz, rx + rw, rz) ||
+         lineLineIntersect(x1, z1, x2, z2, rx, rz + rd, rx + rw, rz + rd);
 }
 
-function lineLineIntersect(x1, y1, x2, y2, x3, y3, x4, y4) {
-  const den = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+function lineLineIntersect(x1, z1, x2, z2, x3, z3, x4, z4) {
+  const den = (x1 - x2) * (z3 - z4) - (z1 - z2) * (x3 - x4);
   if (den === 0) return false;
-  const t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / den;
-  const u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / den;
+  const t = ((x1 - x3) * (z3 - z4) - (z1 - z3) * (x3 - x4)) / den;
+  const u = -((x1 - x2) * (z1 - z3) - (z1 - z2) * (x1 - x3)) / den;
   return t >= 0 && t <= 1 && u >= 0 && u <= 1;
 }
 
-function hasLineOfSight(x1, y1, x2, y2) {
+function hasLineOfSight(x1, z1, x2, z2) {
   for (const obs of obstacles) {
-    if (lineRectIntersect(x1, y1, x2, y2, obs.x, obs.y, obs.w, obs.h)) {
-      return false;
-    }
+    if (lineRectIntersect(x1, z1, x2, z2, obs.x, obs.z, obs.w, obs.d)) return false;
   }
   return true;
 }
 
-function circleRectCollision(cx, cy, cr, rx, ry, rw, rh) {
+function circleRectCollision(cx, cz, cr, rx, rz, rw, rd) {
   const closestX = Math.max(rx, Math.min(cx, rx + rw));
-  const closestY = Math.max(ry, Math.min(cy, ry + rh));
+  const closestZ = Math.max(rz, Math.min(cz, rz + rd));
   const dx = cx - closestX;
-  const dy = cy - closestY;
-  return (dx * dx + dy * dy) < (cr * cr);
+  const dz = cz - closestZ;
+  return (dx * dx + dz * dz) < (cr * cr);
 }
 
-function resolveCircleRect(cx, cy, cr, rx, ry, rw, rh) {
-  const closestX = Math.max(rx, Math.min(cx, rx + rw));
-  const closestY = Math.max(ry, Math.min(cy, ry + rh));
-  const dx = cx - closestX;
-  const dy = cy - closestY;
-  const dist = Math.sqrt(dx * dx + dy * dy);
-  if (dist < cr && dist > 0) {
-    const overlap = cr - dist;
-    return { x: cx + (dx / dist) * overlap, y: cy + (dy / dist) * overlap };
+// ===== MAP GENERATION =====
+function clearObstacles() {
+  for (const obs of obstacles) {
+    scene.remove(obs.mesh);
+    obs.mesh.geometry.dispose();
+    obs.mesh.material.dispose();
   }
-  return null;
+  obstacles = [];
 }
 
-// ===== ГЕНЕРАЦИЯ КАРТЫ =====
+function addObstacle(x, z, w, d, h, type) {
+  let color, emissive = 0x000000;
+  if (type === 'crate') {
+    color = 0x7a5a2a;
+  } else {
+    color = 0x555566;
+  }
+  const mesh = new THREE.Mesh(
+    new THREE.BoxGeometry(w, h, d),
+    new THREE.MeshStandardMaterial({ color, roughness: 0.8 })
+  );
+  mesh.position.set(x + w/2, h/2, z + d/2);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  scene.add(mesh);
+  
+  // Add crate detail lines (edges)
+  if (type === 'crate') {
+    const edges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(mesh.geometry),
+      new THREE.LineBasicMaterial({ color: 0x3d2f1a })
+    );
+    mesh.add(edges);
+  }
+  
+  obstacles.push({ x, z, w, d, h, type, mesh });
+}
+
 function generateMap() {
-  obstacles = [];
-  // Границы карты
-  const borderWidth = 30;
-  // Случайные ящики
+  clearObstacles();
   const numObstacles = 8 + currentLevel * 2;
   let attempts = 0;
   while (obstacles.length < numObstacles && attempts < 200) {
     attempts++;
     const w = 40 + Math.random() * 80;
-    const h = 40 + Math.random() * 80;
-    const x = 80 + Math.random() * (W - 160 - w);
-    const y = 80 + Math.random() * (H - 160 - h);
-    // Не ставим слишком близко к центру (спавн игрока)
-    if (distance(x + w/2, y + h/2, W/2, H/2) < 120) continue;
-    // Не пересекаем с другими
+    const d = 40 + Math.random() * 80;
+    const h = 30 + Math.random() * 30;
+    const x = -WORLD_W/2 + 80 + Math.random() * (WORLD_W - 160 - w);
+    const z = -WORLD_H/2 + 80 + Math.random() * (WORLD_H - 160 - d);
+    if (distance(x + w/2, z + d/2, 0, 0) < 120) continue;
     let overlaps = false;
     for (const o of obstacles) {
-      if (x < o.x + o.w + 30 && x + w + 30 > o.x && y < o.y + o.h + 30 && y + h + 30 > o.y) {
+      if (x < o.x + o.w + 30 && x + w + 30 > o.x && z < o.z + o.d + 30 && z + d + 30 > o.z) {
         overlaps = true;
         break;
       }
     }
-    if (!overlaps) {
-      obstacles.push({ x, y, w, h, type: 'crate' });
-    }
+    if (!overlaps) addObstacle(x, z, w, d, h, 'crate');
   }
-  // Стены по краям для тактики
-  obstacles.push({ x: 150, y: 150, w: 20, h: 120, type: 'wall' });
-  obstacles.push({ x: W - 170, y: 150, w: 20, h: 120, type: 'wall' });
-  obstacles.push({ x: 150, y: H - 270, w: 20, h: 120, type: 'wall' });
-  obstacles.push({ x: W - 170, y: H - 270, w: 20, h: 120, type: 'wall' });
+  // Tactical walls
+  addObstacle(-WORLD_W/2 + 150, -WORLD_H/2 + 150, 20, 120, 50, 'wall');
+  addObstacle(WORLD_W/2 - 170, -WORLD_H/2 + 150, 20, 120, 50, 'wall');
+  addObstacle(-WORLD_W/2 + 150, WORLD_H/2 - 270, 20, 120, 50, 'wall');
+  addObstacle(WORLD_W/2 - 170, WORLD_H/2 - 270, 20, 120, 50, 'wall');
 }
 
-// ===== СПАВН ВРАГОВ =====
-function spawnEnemies() {
+// ===== ENEMY SPAWNING =====
+function clearEnemies() {
+  for (const e of enemies) {
+    scene.remove(e.group);
+  }
   enemies = [];
+}
+
+function spawnEnemies() {
+  clearEnemies();
   const numEnemies = 3 + currentLevel * 2;
   const baseHp = 60 + currentLevel * 15;
   const baseDamage = 8 + currentLevel * 2;
@@ -464,30 +649,72 @@ function spawnEnemies() {
   const baseFireRate = 1500 - currentLevel * 50;
   
   for (let i = 0; i < numEnemies; i++) {
-    let x, y, valid = false;
+    let x, z, valid = false;
     let tries = 0;
     while (!valid && tries < 50) {
       tries++;
-      // Спавн по краям карты
       const side = Math.floor(Math.random() * 4);
-      if (side === 0) { x = 50 + Math.random() * 100; y = 50 + Math.random() * (H - 100); }
-      else if (side === 1) { x = W - 150 + Math.random() * 100; y = 50 + Math.random() * (H - 100); }
-      else if (side === 2) { x = 50 + Math.random() * (W - 100); y = 50 + Math.random() * 100; }
-      else { x = 50 + Math.random() * (W - 100); y = H - 150 + Math.random() * 100; }
-      
-      valid = distance(x, y, player.x, player.y) > 250;
+      if (side === 0) { x = -WORLD_W/2 + 50 + Math.random() * 100; z = -WORLD_H/2 + 50 + Math.random() * (WORLD_H - 100); }
+      else if (side === 1) { x = WORLD_W/2 - 150 + Math.random() * 100; z = -WORLD_H/2 + 50 + Math.random() * (WORLD_H - 100); }
+      else if (side === 2) { x = -WORLD_W/2 + 50 + Math.random() * (WORLD_W - 100); z = -WORLD_H/2 + 50 + Math.random() * 100; }
+      else { x = -WORLD_W/2 + 50 + Math.random() * (WORLD_W - 100); z = WORLD_H/2 - 150 + Math.random() * 100; }
+      valid = distance(x, z, player.x, player.z) > 250;
       for (const o of obstacles) {
-        if (circleRectCollision(x, y, 20, o.x, o.y, o.w, o.h)) {
-          valid = false;
-          break;
-        }
+        if (circleRectCollision(x, z, 20, o.x, o.z, o.w, o.d)) { valid = false; break; }
       }
     }
     
     const isBoss = (i === numEnemies - 1 && currentLevel % 3 === 0);
+    const radius = isBoss ? 24 : 16;
+    const height = isBoss ? 45 : 30;
+    const color = isBoss ? 0xff2222 : 0xe74c3c;
+    
+    const group = new THREE.Group();
+    const body = new THREE.Mesh(
+      new THREE.CylinderGeometry(radius, radius, height, 16),
+      new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.2 })
+    );
+    body.position.y = height/2;
+    body.castShadow = true;
+    group.add(body);
+    
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(radius * 0.65, 16, 12),
+      new THREE.MeshStandardMaterial({ color: isBoss ? 0xaa0000 : 0xb83030, roughness: 0.4 })
+    );
+    head.position.y = height + radius * 0.4;
+    head.castShadow = true;
+    group.add(head);
+    
+    const gun = new THREE.Mesh(
+      new THREE.BoxGeometry(18, 3, 5),
+      new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8, roughness: 0.3 })
+    );
+    gun.position.set(radius + 8, height * 0.6, 0);
+    gun.castShadow = true;
+    group.add(gun);
+    
+    // HP bar (billboard)
+    const hpBarBg = new THREE.Mesh(
+      new THREE.PlaneGeometry(radius * 2.5, 3),
+      new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.7 })
+    );
+    hpBarBg.position.y = height + radius * 1.5;
+    group.add(hpBarBg);
+    
+    const hpBarFill = new THREE.Mesh(
+      new THREE.PlaneGeometry(radius * 2.5, 2.5),
+      new THREE.MeshBasicMaterial({ color: isBoss ? 0xff0000 : 0x4CAF50 })
+    );
+    hpBarFill.position.y = height + radius * 1.5;
+    hpBarFill.position.z = 0.1;
+    group.add(hpBarFill);
+    
+    group.position.set(x, 0, z);
+    scene.add(group);
+    
     enemies.push({
-      x, y,
-      radius: isBoss ? 24 : 16,
+      x, z, radius, height,
       hp: isBoss ? baseHp * 3 : baseHp,
       maxHp: isBoss ? baseHp * 3 : baseHp,
       speed: isBoss ? baseSpeed * 0.7 : baseSpeed,
@@ -498,15 +725,28 @@ function spawnEnemies() {
       isBoss,
       state: 'patrol',
       patrolTarget: null,
-      stuckTimer: 0,
-      lastX: x,
-      lastY: y,
-      color: isBoss ? '#ff0000' : '#e74c3c'
+      group,
+      hpBarBg,
+      hpBarFill,
+      hpBarWidth: radius * 2.5
     });
   }
 }
 
-// ===== СТРЕЛЬБА =====
+// ===== BULLETS =====
+function clearBullets() {
+  for (const b of bullets) { scene.remove(b.mesh); b.mesh.geometry.dispose(); b.mesh.material.dispose(); }
+  for (const b of enemyBullets) { scene.remove(b.mesh); b.mesh.geometry.dispose(); b.mesh.material.dispose(); }
+  bullets = [];
+  enemyBullets = [];
+}
+
+function clearParticles() {
+  for (const p of particles) { scene.remove(p.mesh); p.mesh.geometry.dispose(); p.mesh.material.dispose(); }
+  particles = [];
+}
+
+// ===== SHOOTING =====
 function startReload() {
   if (player.reloading) return;
   const weapon = WEAPONS[player.weapon];
@@ -514,6 +754,8 @@ function startReload() {
   if (player.reserve <= 0) return;
   player.reloading = true;
   player.reloadStart = Date.now();
+  document.getElementById('reloadBar').style.display = 'block';
+  document.getElementById('reloadText').style.display = 'block';
 }
 
 function shoot() {
@@ -521,10 +763,7 @@ function shoot() {
   const weapon = WEAPONS[player.weapon];
   const now = Date.now();
   if (now - player.lastShot < weapon.fireRate) return;
-  if (player.ammo <= 0) {
-    startReload();
-    return;
-  }
+  if (player.ammo <= 0) { startReload(); return; }
   
   player.lastShot = now;
   player.ammo--;
@@ -533,27 +772,45 @@ function shoot() {
   const spread = (Math.random() - 0.5) * weapon.spread * 2;
   const angle = player.angle + spread;
   
+  const bulletMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(2, 8, 6),
+    new THREE.MeshBasicMaterial({ color: weapon.color })
+  );
+  const startX = player.x + Math.cos(angle) * 22;
+  const startZ = player.z + Math.sin(angle) * 22;
+  bulletMesh.position.set(startX, 18, startZ);
+  scene.add(bulletMesh);
+  
+  // Muzzle flash light
+  const muzzleLight = new THREE.PointLight(weapon.color, 2, 50);
+  muzzleLight.position.set(startX, 18, startZ);
+  scene.add(muzzleLight);
+  setTimeout(() => scene.remove(muzzleLight), 50);
+  
   bullets.push({
-    x: player.x + Math.cos(angle) * 20,
-    y: player.y + Math.sin(angle) * 20,
+    x: startX, z: startZ,
     vx: Math.cos(angle) * weapon.bulletSpeed,
-    vy: Math.sin(angle) * weapon.bulletSpeed,
+    vz: Math.sin(angle) * weapon.bulletSpeed,
     damage: weapon.damage,
     life: 60,
+    mesh: bulletMesh,
     color: weapon.color
   });
   
-  // Эффект выстрела
-  for (let i = 0; i < 3; i++) {
+  // Muzzle particles
+  for (let i = 0; i < 4; i++) {
+    const pMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(1.5, 6, 4),
+      new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 1 })
+    );
+    pMesh.position.set(startX, 18, startZ);
+    scene.add(pMesh);
     particles.push({
-      x: player.x + Math.cos(angle) * 25,
-      y: player.y + Math.sin(angle) * 25,
+      mesh: pMesh,
       vx: Math.cos(angle + (Math.random() - 0.5)) * 3,
-      vy: Math.sin(angle + (Math.random() - 0.5)) * 3,
-      life: 10,
-      maxLife: 10,
-      color: '#ffaa00',
-      size: 3
+      vz: Math.sin(angle + (Math.random() - 0.5)) * 3,
+      vy: (Math.random() - 0.5) * 2,
+      life: 12, maxLife: 12
     });
   }
 }
@@ -562,115 +819,137 @@ function enemyShoot(enemy) {
   const angle = enemy.angle;
   const spread = (Math.random() - 0.5) * 0.15;
   const finalAngle = angle + spread;
+  
+  const bulletMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(2, 8, 6),
+    new THREE.MeshBasicMaterial({ color: 0xff4444 })
+  );
+  const startX = enemy.x + Math.cos(finalAngle) * 22;
+  const startZ = enemy.z + Math.sin(finalAngle) * 22;
+  bulletMesh.position.set(startX, enemy.height * 0.6, startZ);
+  scene.add(bulletMesh);
+  
   enemyBullets.push({
-    x: enemy.x + Math.cos(finalAngle) * 20,
-    y: enemy.y + Math.sin(finalAngle) * 20,
+    x: startX, z: startZ,
     vx: Math.cos(finalAngle) * 8,
-    vy: Math.sin(finalAngle) * 8,
+    vz: Math.sin(finalAngle) * 8,
     damage: enemy.damage,
     life: 80,
-    color: '#ff4444'
+    mesh: bulletMesh,
+    y: enemy.height * 0.6
   });
 }
 
-// ===== ОБНОВЛЕНИЕ =====
+// ===== UPDATE =====
 function update() {
   if (gameState !== 'playing') return;
   
-  // Перезарядка
+  // Reload
   if (player.reloading) {
     const weapon = WEAPONS[player.weapon];
-    if (Date.now() - player.reloadStart >= weapon.reloadTime) {
+    const elapsed = Date.now() - player.reloadStart;
+    const progress = Math.min(1, elapsed / weapon.reloadTime);
+    document.querySelector('#reloadBar .fill').style.width = (progress * 100) + '%';
+    if (elapsed >= weapon.reloadTime) {
       const needed = weapon.magSize - player.ammo;
       const available = Math.min(needed, player.reserve);
       player.ammo += available;
       player.reserve -= available;
       player.reloading = false;
+      document.getElementById('reloadBar').style.display = 'none';
+      document.getElementById('reloadText').style.display = 'none';
     }
   }
   
-  // Движение игрока
-  let dx = 0, dy = 0;
-  if (keys['w']) dy -= 1;
-  if (keys['s']) dy += 1;
+  // Player movement
+  let dx = 0, dz = 0;
+  if (keys['w']) dz -= 1;
+  if (keys['s']) dz += 1;
   if (keys['a']) dx -= 1;
   if (keys['d']) dx += 1;
-  if (dx !== 0 || dy !== 0) {
-    const len = Math.sqrt(dx * dx + dy * dy);
-    dx /= len;
-    dy /= len;
+  if (dx !== 0 || dz !== 0) {
+    const len = Math.sqrt(dx * dx + dz * dz);
+    dx /= len; dz /= len;
   }
   
   const newX = player.x + dx * player.speed;
-  const newY = player.y + dy * player.speed;
+  const newZ = player.z + dz * player.speed;
   
-  // Коллизия с препятствиями
-  let canMoveX = true, canMoveY = true;
+  let canMoveX = true, canMoveZ = true;
   for (const obs of obstacles) {
-    if (circleRectCollision(newX, player.y, player.radius, obs.x, obs.y, obs.w, obs.h)) canMoveX = false;
-    if (circleRectCollision(player.x, newY, player.radius, obs.x, obs.y, obs.w, obs.h)) canMoveY = false;
+    if (circleRectCollision(newX, player.z, player.radius, obs.x, obs.z, obs.w, obs.d)) canMoveX = false;
+    if (circleRectCollision(player.x, newZ, player.radius, obs.x, obs.z, obs.w, obs.d)) canMoveZ = false;
   }
   if (canMoveX) player.x = newX;
-  if (canMoveY) player.y = newY;
+  if (canMoveZ) player.z = newZ;
   
-  // Границы
-  player.x = Math.max(player.radius, Math.min(W - player.radius, player.x));
-  player.y = Math.max(player.radius, Math.min(H - player.radius, player.y));
+  player.x = Math.max(-WORLD_W/2 + player.radius, Math.min(WORLD_W/2 - player.radius, player.x));
+  player.z = Math.max(-WORLD_H/2 + player.radius, Math.min(WORLD_H/2 - player.radius, player.z));
   
-  // Прицел
-  player.angle = Math.atan2(mouseY - player.y, mouseX - player.x);
+  // Update player 3D
+  playerGroup.position.set(player.x, 0, player.z);
+  playerGroup.rotation.y = -player.angle + Math.PI/2;
+  // Gun color
+  playerGun.material.color.setHex(WEAPONS[player.weapon].color);
   
-  // Стрельба
   if (mouseDown) shoot();
   
-  // Обновление пуль игрока
+  // Player bullets
   for (let i = bullets.length - 1; i >= 0; i--) {
     const b = bullets[i];
     b.x += b.vx;
-    b.y += b.vy;
+    b.z += b.vz;
     b.life--;
+    b.mesh.position.set(b.x, 18, b.z);
     
-    // Столкновение с препятствиями
     let hitWall = false;
     for (const obs of obstacles) {
-      if (b.x > obs.x && b.x < obs.x + obs.w && b.y > obs.y && b.y < obs.y + obs.h) {
+      if (b.x > obs.x && b.x < obs.x + obs.w && b.z > obs.z && b.z < obs.z + obs.d) {
         hitWall = true;
-        // Искры
-        for (let j = 0; j < 5; j++) {
+        for (let j = 0; j < 6; j++) {
+          const pMesh = new THREE.Mesh(
+            new THREE.SphereGeometry(1.5, 6, 4),
+            new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 1 })
+          );
+          pMesh.position.set(b.x, 18, b.z);
+          scene.add(pMesh);
           particles.push({
-            x: b.x, y: b.y,
+            mesh: pMesh,
             vx: (Math.random() - 0.5) * 4,
-            vy: (Math.random() - 0.5) * 4,
-            life: 15, maxLife: 15,
-            color: '#ffaa00', size: 2
+            vz: (Math.random() - 0.5) * 4,
+            vy: Math.random() * 3,
+            life: 18, maxLife: 18
           });
         }
         break;
       }
     }
     
-    // Столкновение с врагами
     let hitEnemy = false;
     for (const enemy of enemies) {
-      if (distance(b.x, b.y, enemy.x, enemy.y) < enemy.radius) {
+      if (distance(b.x, b.z, enemy.x, enemy.z) < enemy.radius) {
         enemy.hp -= b.damage;
         shotsHit++;
         hitEnemy = true;
-        // Число урона
-        damageNumbers.push({
-          x: enemy.x, y: enemy.y - 20,
-          value: b.damage,
-          life: 40,
-          vy: -1
-        });
-        // Кровь
-        for (let j = 0; j < 8; j++) {
+        // Update HP bar
+        const ratio = Math.max(0, enemy.hp / enemy.maxHp);
+        enemy.hpBarFill.scale.x = ratio || 0.001;
+        enemy.hpBarFill.position.x = -(enemy.hpBarWidth * (1 - ratio)) / 2;
+        
+        // Blood particles
+        for (let j = 0; j < 10; j++) {
+          const pMesh = new THREE.Mesh(
+            new THREE.SphereGeometry(1.8, 6, 4),
+            new THREE.MeshBasicMaterial({ color: 0xcc0000, transparent: true, opacity: 1 })
+          );
+          pMesh.position.set(b.x, 18, b.z);
+          scene.add(pMesh);
           particles.push({
-            x: b.x, y: b.y,
+            mesh: pMesh,
             vx: (Math.random() - 0.5) * 5,
-            vy: (Math.random() - 0.5) * 5,
-            life: 20, maxLife: 20,
-            color: '#cc0000', size: 3
+            vz: (Math.random() - 0.5) * 5,
+            vy: Math.random() * 4,
+            life: 25, maxLife: 25
           });
         }
         if (enemy.hp <= 0) {
@@ -682,19 +961,26 @@ function update() {
       }
     }
     
-    if (hitWall || hitEnemy || b.life <= 0 || b.x < 0 || b.x > W || b.y < 0 || b.y > H) {
+    if (hitWall || hitEnemy || b.life <= 0 || Math.abs(b.x) > WORLD_W/2 || Math.abs(b.z) > WORLD_H/2) {
+      scene.remove(b.mesh);
+      b.mesh.geometry.dispose();
+      b.mesh.material.dispose();
       bullets.splice(i, 1);
     }
   }
   
-  // Удаление мертвых врагов
+  // Remove dead enemies
+  const deadEnemies = enemies.filter(e => e.hp <= 0);
+  for (const e of deadEnemies) {
+    scene.remove(e.group);
+  }
   enemies = enemies.filter(e => e.hp > 0);
   
-  // Обновление врагов
+  // Enemy AI
   const now = Date.now();
   for (const enemy of enemies) {
-    const distToPlayer = distance(enemy.x, enemy.y, player.x, player.y);
-    const canSee = hasLineOfSight(enemy.x, enemy.y, player.x, player.y);
+    const distToPlayer = distance(enemy.x, enemy.z, player.x, player.z);
+    const canSee = hasLineOfSight(enemy.x, enemy.z, player.x, player.z);
     
     if (canSee && distToPlayer < 500) {
       enemy.state = 'attack';
@@ -703,77 +989,64 @@ function update() {
     }
     
     if (enemy.state === 'attack') {
-      enemy.angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
-      // Двигаемся к игроку если далеко
+      enemy.angle = Math.atan2(player.z - enemy.z, player.x - enemy.x);
       if (distToPlayer > 200) {
         const moveX = enemy.x + Math.cos(enemy.angle) * enemy.speed;
-        const moveY = enemy.y + Math.sin(enemy.angle) * enemy.speed;
+        const moveZ = enemy.z + Math.sin(enemy.angle) * enemy.speed;
         let blocked = false;
         for (const obs of obstacles) {
-          if (circleRectCollision(moveX, moveY, enemy.radius, obs.x, obs.y, obs.w, obs.h)) {
-            blocked = true;
-            break;
-          }
+          if (circleRectCollision(moveX, moveZ, enemy.radius, obs.x, obs.z, obs.w, obs.d)) { blocked = true; break; }
         }
-        if (!blocked) {
-          enemy.x = moveX;
-          enemy.y = moveY;
-        }
+        if (!blocked) { enemy.x = moveX; enemy.z = moveZ; }
       }
-      // Стреляем
       if (canSee && now - enemy.lastShot > enemy.fireRate) {
         enemy.lastShot = now;
         enemyShoot(enemy);
       }
     } else {
-      // Патрулирование
-      if (!enemy.patrolTarget || distance(enemy.x, enemy.y, enemy.patrolTarget.x, enemy.patrolTarget.y) < 30) {
+      if (!enemy.patrolTarget || distance(enemy.x, enemy.z, enemy.patrolTarget.x, enemy.patrolTarget.z) < 30) {
         enemy.patrolTarget = {
-          x: 50 + Math.random() * (W - 100),
-          y: 50 + Math.random() * (H - 100)
+          x: -WORLD_W/2 + 50 + Math.random() * (WORLD_W - 100),
+          z: -WORLD_H/2 + 50 + Math.random() * (WORLD_H - 100)
         };
       }
-      const angle = Math.atan2(enemy.patrolTarget.y - enemy.y, enemy.patrolTarget.x - enemy.x);
+      const angle = Math.atan2(enemy.patrolTarget.z - enemy.z, enemy.patrolTarget.x - enemy.x);
       enemy.angle = angle;
       const moveX = enemy.x + Math.cos(angle) * enemy.speed * 0.5;
-      const moveY = enemy.y + Math.sin(angle) * enemy.speed * 0.5;
+      const moveZ = enemy.z + Math.sin(angle) * enemy.speed * 0.5;
       let blocked = false;
       for (const obs of obstacles) {
-        if (circleRectCollision(moveX, moveY, enemy.radius, obs.x, obs.y, obs.w, obs.h)) {
-          blocked = true;
-          break;
-        }
+        if (circleRectCollision(moveX, moveZ, enemy.radius, obs.x, obs.z, obs.w, obs.d)) { blocked = true; break; }
       }
-      if (!blocked) {
-        enemy.x = moveX;
-        enemy.y = moveY;
-      } else {
-        enemy.patrolTarget = null;
-      }
+      if (!blocked) { enemy.x = moveX; enemy.z = moveZ; }
+      else enemy.patrolTarget = null;
     }
     
-    // Границы
-    enemy.x = Math.max(enemy.radius, Math.min(W - enemy.radius, enemy.x));
-    enemy.y = Math.max(enemy.radius, Math.min(H - enemy.radius, enemy.y));
+    enemy.x = Math.max(-WORLD_W/2 + enemy.radius, Math.min(WORLD_W/2 - enemy.radius, enemy.x));
+    enemy.z = Math.max(-WORLD_H/2 + enemy.radius, Math.min(WORLD_H/2 - enemy.radius, enemy.z));
+    
+    enemy.group.position.set(enemy.x, 0, enemy.z);
+    enemy.group.rotation.y = -enemy.angle + Math.PI/2;
+    
+    // Billboard HP bar toward camera
+    enemy.hpBarBg.lookAt(camera.position);
+    enemy.hpBarFill.lookAt(camera.position);
   }
   
-  // Обновление вражеских пуль
+  // Enemy bullets
   for (let i = enemyBullets.length - 1; i >= 0; i--) {
     const b = enemyBullets[i];
     b.x += b.vx;
-    b.y += b.vy;
+    b.z += b.vz;
     b.life--;
+    b.mesh.position.set(b.x, b.y, b.z);
     
     let hitWall = false;
     for (const obs of obstacles) {
-      if (b.x > obs.x && b.x < obs.x + obs.w && b.y > obs.y && b.y < obs.y + obs.h) {
-        hitWall = true;
-        break;
-      }
+      if (b.x > obs.x && b.x < obs.x + obs.w && b.z > obs.z && b.z < obs.z + obs.d) { hitWall = true; break; }
     }
     
-    // Попадание в игрока
-    if (distance(b.x, b.y, player.x, player.y) < player.radius) {
+    if (distance(b.x, b.z, player.x, player.z) < player.radius) {
       let dmg = b.damage;
       if (player.armor > 0) {
         const absorbed = Math.min(player.armor, dmg * 0.5);
@@ -781,58 +1054,83 @@ function update() {
         dmg -= absorbed;
       }
       player.hp -= dmg;
-      // Эффект попадания
-      for (let j = 0; j < 6; j++) {
+      for (let j = 0; j < 8; j++) {
+        const pMesh = new THREE.Mesh(
+          new THREE.SphereGeometry(1.8, 6, 4),
+          new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 1 })
+        );
+        pMesh.position.set(b.x, 18, b.z);
+        scene.add(pMesh);
         particles.push({
-          x: b.x, y: b.y,
+          mesh: pMesh,
           vx: (Math.random() - 0.5) * 4,
-          vy: (Math.random() - 0.5) * 4,
-          life: 15, maxLife: 15,
-          color: '#ff0000', size: 3
+          vz: (Math.random() - 0.5) * 4,
+          vy: Math.random() * 3,
+          life: 20, maxLife: 20
         });
       }
+      scene.remove(b.mesh);
+      b.mesh.geometry.dispose();
+      b.mesh.material.dispose();
       enemyBullets.splice(i, 1);
       continue;
     }
     
-    if (hitWall || b.life <= 0 || b.x < 0 || b.x > W || b.y < 0 || b.y > H) {
+    if (hitWall || b.life <= 0 || Math.abs(b.x) > WORLD_W/2 || Math.abs(b.z) > WORLD_H/2) {
+      scene.remove(b.mesh);
+      b.mesh.geometry.dispose();
+      b.mesh.material.dispose();
       enemyBullets.splice(i, 1);
     }
   }
   
-  // Частицы
+  // Particles
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i];
-    p.x += p.vx;
-    p.y += p.vy;
-    p.vx *= 0.9;
-    p.vy *= 0.9;
+    p.mesh.position.x += p.vx;
+    p.mesh.position.z += p.vz;
+    p.mesh.position.y += p.vy;
+    p.vy -= 0.2; // gravity
+    if (p.mesh.position.y < 0.5) { p.mesh.position.y = 0.5; p.vy = 0; p.vx *= 0.7; p.vz *= 0.7; }
+    p.vx *= 0.95;
+    p.vz *= 0.95;
     p.life--;
-    if (p.life <= 0) particles.splice(i, 1);
+    p.mesh.material.opacity = p.life / p.maxLife;
+    if (p.life <= 0) {
+      scene.remove(p.mesh);
+      p.mesh.geometry.dispose();
+      p.mesh.material.dispose();
+      particles.splice(i, 1);
+    }
   }
   
-  // Числа урона
-  for (let i = damageNumbers.length - 1; i >= 0; i--) {
-    const d = damageNumbers[i];
-    d.y += d.vy;
-    d.life--;
-    if (d.life <= 0) damageNumbers.splice(i, 1);
-  }
+  // Camera follow
+  const camOffsetX = 0;
+  const camOffsetZ = 280;
+  const camHeight = 420;
+  camera.position.set(player.x + camOffsetX, camHeight, player.z + camOffsetZ);
+  camera.lookAt(player.x, 0, player.z);
   
-  // Проверка смерти игрока
+  // Death check
   if (player.hp <= 0) {
     gameState = 'gameOver';
     document.getElementById('hud').classList.add('hidden');
+    document.getElementById('crosshair').style.display = 'none';
+    document.getElementById('reloadBar').style.display = 'none';
+    document.getElementById('reloadText').style.display = 'none';
     document.getElementById('gameOverScreen').classList.remove('hidden');
     document.getElementById('goLevel').textContent = currentLevel;
     document.getElementById('goKills').textContent = totalKills;
     return;
   }
   
-  // Проверка победы на уровне
+  // Level complete
   if (enemies.length === 0) {
     gameState = 'levelComplete';
     document.getElementById('hud').classList.add('hidden');
+    document.getElementById('crosshair').style.display = 'none';
+    document.getElementById('reloadBar').style.display = 'none';
+    document.getElementById('reloadText').style.display = 'none';
     document.getElementById('levelCompleteScreen').classList.remove('hidden');
     const reward = 1000 + currentLevel * 200;
     money += reward;
@@ -851,7 +1149,7 @@ function update() {
     }
   }
   
-  // Обновление HUD
+  // HUD
   document.getElementById('hudHp').textContent = Math.max(0, Math.round(player.hp));
   document.getElementById('hudLevel').textContent = currentLevel;
   document.getElementById('hudMoney').textContent = '$' + money;
@@ -861,213 +1159,18 @@ function update() {
   document.getElementById('hudEnemies').textContent = enemies.length;
 }
 
-// ===== РЕНДЕРИНГ =====
-function draw() {
-  // Фон
-  ctx.fillStyle = '#2a2a2a';
-  ctx.fillRect(0, 0, W, H);
-  
-  // Сетка пола
-  ctx.strokeStyle = '#333';
-  ctx.lineWidth = 1;
-  for (let x = 0; x < W; x += 50) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, H);
-    ctx.stroke();
-  }
-  for (let y = 0; y < H; y += 50) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(W, y);
-    ctx.stroke();
-  }
-  
-  // Препятствия
-  for (const obs of obstacles) {
-    if (obs.type === 'crate') {
-      ctx.fillStyle = '#5d4a2a';
-      ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
-      ctx.strokeStyle = '#3d2f1a';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
-      // Диагональные линии
-      ctx.beginPath();
-      ctx.moveTo(obs.x, obs.y);
-      ctx.lineTo(obs.x + obs.w, obs.y + obs.h);
-      ctx.moveTo(obs.x + obs.w, obs.y);
-      ctx.lineTo(obs.x, obs.y + obs.h);
-      ctx.stroke();
-    } else {
-      ctx.fillStyle = '#444';
-      ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
-      ctx.strokeStyle = '#222';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
-    }
-  }
-  
-  // Частицы
-  for (const p of particles) {
-    ctx.globalAlpha = p.life / p.maxLife;
-    ctx.fillStyle = p.color;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-  
-  // Пули игрока
-  for (const b of bullets) {
-    ctx.fillStyle = b.color;
-    ctx.beginPath();
-    ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
-    ctx.fill();
-    // След
-    ctx.strokeStyle = b.color;
-    ctx.globalAlpha = 0.4;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(b.x, b.y);
-    ctx.lineTo(b.x - b.vx * 2, b.y - b.vy * 2);
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-  }
-  
-  // Вражеские пули
-  for (const b of enemyBullets) {
-    ctx.fillStyle = b.color;
-    ctx.beginPath();
-    ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  
-  // Враги
-  for (const enemy of enemies) {
-    // Тело
-    ctx.fillStyle = enemy.color;
-    ctx.beginPath();
-    ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    
-    // Оружие (линия)
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(enemy.x, enemy.y);
-    ctx.lineTo(enemy.x + Math.cos(enemy.angle) * (enemy.radius + 10), enemy.y + Math.sin(enemy.angle) * (enemy.radius + 10));
-    ctx.stroke();
-    
-    // Полоска HP
-    const hpWidth = enemy.radius * 2;
-    const hpHeight = 4;
-    const hpX = enemy.x - enemy.radius;
-    const hpY = enemy.y - enemy.radius - 10;
-    ctx.fillStyle = '#000';
-    ctx.fillRect(hpX, hpY, hpWidth, hpHeight);
-    ctx.fillStyle = enemy.isBoss ? '#ff0000' : '#4CAF50';
-    ctx.fillRect(hpX, hpY, hpWidth * (enemy.hp / enemy.maxHp), hpHeight);
-    
-    if (enemy.isBoss) {
-      ctx.fillStyle = '#ff0000';
-      ctx.font = 'bold 10px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('БОСС', enemy.x, enemy.y - enemy.radius - 15);
-    }
-  }
-  
-  // Игрок
-  ctx.save();
-  ctx.translate(player.x, player.y);
-  ctx.rotate(player.angle);
-  
-  // Тело
-  ctx.fillStyle = '#4a90e2';
-  ctx.beginPath();
-  ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = '#000';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  
-  // Оружие
-  ctx.fillStyle = WEAPONS[player.weapon].color;
-  ctx.fillRect(10, -3, 18, 6);
-  ctx.strokeStyle = '#000';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(10, -3, 18, 6);
-  
-  ctx.restore();
-  
-  // Полоска HP игрока
-  const playerHpWidth = 60;
-  const playerHpX = player.x - playerHpWidth / 2;
-  const playerHpY = player.y - player.radius - 15;
-  ctx.fillStyle = '#000';
-  ctx.fillRect(playerHpX, playerHpY, playerHpWidth, 5);
-  ctx.fillStyle = player.hp > 50 ? '#4CAF50' : player.hp > 25 ? '#f5a623' : '#ff4444';
-  ctx.fillRect(playerHpX, playerHpY, playerHpWidth * (player.hp / player.maxHp), 5);
-  
-  // Броня
-  if (player.armor > 0) {
-    ctx.fillStyle = '#000';
-    ctx.fillRect(playerHpX, playerHpY + 7, playerHpWidth, 3);
-    ctx.fillStyle = '#2196F3';
-    ctx.fillRect(playerHpX, playerHpY + 7, playerHpWidth * (player.armor / 100), 3);
-  }
-  
-  // Числа урона
-  for (const d of damageNumbers) {
-    ctx.globalAlpha = d.life / 40;
-    ctx.fillStyle = '#ff4444';
-    ctx.font = 'bold 16px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('-' + d.value, d.x, d.y);
-  }
-  ctx.globalAlpha = 1;
-  
-  // Прицел
-  ctx.strokeStyle = '#f5a623';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.arc(mouseX, mouseY, 10, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(mouseX - 15, mouseY);
-  ctx.lineTo(mouseX - 5, mouseY);
-  ctx.moveTo(mouseX + 5, mouseY);
-  ctx.lineTo(mouseX + 15, mouseY);
-  ctx.moveTo(mouseX, mouseY - 15);
-  ctx.lineTo(mouseX, mouseY - 5);
-  ctx.moveTo(mouseX, mouseY + 5);
-  ctx.lineTo(mouseX, mouseY + 15);
-  ctx.stroke();
-  
-  // Индикатор перезарядки
-  if (player.reloading) {
-    const weapon = WEAPONS[player.weapon];
-    const progress = (Date.now() - player.reloadStart) / weapon.reloadTime;
-    ctx.fillStyle = 'rgba(0,0,0,0.7)';
-    ctx.fillRect(player.x - 30, player.y + 25, 60, 8);
-    ctx.fillStyle = '#f5a623';
-    ctx.fillRect(player.x - 30, player.y + 25, 60 * progress, 8);
-    ctx.fillStyle = '#fff';
-    ctx.font = '12px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('ПЕРЕЗАРЯДКА', player.x, player.y + 45);
-  }
+// ===== RENDER LOOP =====
+function render() {
+  renderer.render(scene, camera);
 }
 
 function gameLoop() {
   update();
-  draw();
+  render();
   requestAnimationFrame(gameLoop);
 }
 
-// ===== УПРАВЛЕНИЕ ИГРОЙ =====
+// ===== GAME FLOW =====
 function startGame() {
   document.getElementById('menuScreen').classList.add('hidden');
   currentLevel = 1;
@@ -1090,7 +1193,6 @@ function renderShop() {
   const shop = document.getElementById('shop');
   shop.innerHTML = '';
   
-  // Броня
   const armorItem = document.createElement('div');
   armorItem.className = 'shop-item' + (player.armor >= 100 ? ' owned' : money < 650 ? ' cant-afford' : '');
   armorItem.innerHTML = `
@@ -1106,7 +1208,6 @@ function renderShop() {
   };
   shop.appendChild(armorItem);
   
-  // Оружие
   for (const key in WEAPONS) {
     if (key === 'pistol') continue;
     const w = WEAPONS[key];
@@ -1147,19 +1248,18 @@ function renderShop() {
 function startLevel() {
   document.getElementById('shopScreen').classList.add('hidden');
   document.getElementById('hud').classList.remove('hidden');
+  document.getElementById('crosshair').style.display = 'block';
   
-  // Сброс состояния уровня
   gameState = 'playing';
   levelKills = 0;
   shotsFired = 0;
   shotsHit = 0;
   player.hp = player.maxHp;
-  player.x = W / 2;
-  player.y = H / 2;
-  bullets = [];
-  enemyBullets = [];
-  particles = [];
-  damageNumbers = [];
+  player.x = 0;
+  player.z = 0;
+  
+  clearBullets();
+  clearParticles();
   
   const weapon = WEAPONS[player.weapon];
   player.ammo = weapon.magSize;
@@ -1170,19 +1270,21 @@ function startLevel() {
   spawnEnemies();
 }
 
-function nextLevel() {
-  currentLevel++;
-  openShop();
-}
-
 function restartGame() {
   document.getElementById('gameOverScreen').classList.add('hidden');
   document.getElementById('victoryScreen').classList.add('hidden');
   document.getElementById('menuScreen').classList.remove('hidden');
   gameState = 'menu';
+  clearBullets();
+  clearParticles();
+  clearEnemies();
+  clearObstacles();
 }
 
-// Запуск игрового цикла
+// Initial camera position for menu
+camera.position.set(0, 420, 280);
+camera.lookAt(0, 0, 0);
+
 gameLoop();
 </script>
 </body>
